@@ -964,7 +964,10 @@ static ssize_t mdss_fb_get_srgb_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_GET_SRGB_MODE,
 			NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+							"0-->sRGB Mode OFF\n"
+							"1-->sRGB Mode ON\n",
+							level);
 	return ret;
 }
 
@@ -1006,7 +1009,10 @@ static ssize_t mdss_fb_get_adobe_rgb_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd,
 		MDSS_EVENT_PANEL_GET_ADOBE_RGB_MODE, NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+					"0-->Adobe RGB Mode OFF\n"
+					"1-->Adobe RGB Mode ON\n",
+					level);
 	return ret;
 }
 
@@ -1047,7 +1053,10 @@ static ssize_t mdss_fb_get_dci_p3_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_GET_DCI_P3_MODE,
 			NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+						"0-->DCI-P3 Mode OFF\n"
+						"1-->DCI-P3 Mode ON\n",
+						level);
 	return ret;
 }
 
@@ -1088,7 +1097,10 @@ static ssize_t mdss_fb_get_night_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_GET_NIGHT_MODE,
 			NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+							"0-->Night Mode OFF\n"
+							"1-->Night Mode ON\n",
+							level);
 	return ret;
 }
 
@@ -1126,7 +1138,10 @@ static ssize_t mdss_fb_get_oneplus_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_GET_ONEPLUS_MODE,
 			NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+						"0-->Oneplus Mode OFF\n"
+						"1-->Oneplus Mode ON\n",
+						level);
 	return ret;
 }
 
@@ -1164,7 +1179,10 @@ static ssize_t mdss_fb_get_adaption_mode(struct device *dev,
 
 	level = mdss_fb_send_panel_event(mfd,
 		MDSS_EVENT_PANEL_GET_ADAPTION_MODE, NULL);
-	ret=scnprintf(buf, PAGE_SIZE, "%d\n", level);
+	ret = scnprintf(buf, PAGE_SIZE, "mode = %d\n"
+						"0-->Adaption Mode OFF\n"
+						"1-->Adaption Mode ON\n",
+						level);
 	return ret;
 }
 
@@ -3485,6 +3503,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
 		}
 		if (ret == -ETIME)
 			ret = NOTIFY_BAD;
+		mfd->idle_state = MDSS_FB_IDLE_TIMER_RUNNING;
 		break;
 	case MDP_NOTIFY_FRAME_FLUSHED:
 		pr_debug("%s: frame flushed\n", sync_pt_data->fence_name);

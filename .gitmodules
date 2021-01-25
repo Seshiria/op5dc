@@ -1,0 +1,13 @@
+[submodule "AnyKernel3"]
+	path = AnyKernel3
+	url = https://github.com/Seshiria/AnyKernel3
+[submodule "aarch64"]
+	path = aarch64
+	url = https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9
+[submodule "arm"]
+	path = arm
+	url = https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9
+[submodule "kernel"]
+	path = kernel
+	url = https://ghproxy.com/https://github.com/LineageOS/android_kernel_oneplus_msm8998
+	ignore = dirty
