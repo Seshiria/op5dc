@@ -49,14 +49,14 @@ Patch(){
     echo "CONFIG_FLICKER_FREE=y" >> arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Releases(){
-    #path to ./kenrel/
+    #path to ./kernel/
     cp -f out/arch/arm64/boot/Image.gz-dtb ../AnyKernel3/Image.gz-dtb
     bash ${GITHUB_WORKSPACE}/zip.sh ${1}
 }
 
 Initsystem
 mkdir releases
-cd ./kenrel/
+cd ./kernel/
 #gcc build
 #make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
 #                        ARCH=arm64 \
