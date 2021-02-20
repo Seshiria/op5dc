@@ -11,3 +11,6 @@
 	path = kernel
 	url = https://github.com/LineageOS/android_kernel_oneplus_msm8998
 	ignore = dirty
+[submodule "llvm"]
+	path = llvm
+	url = https://github.com/kdrag0n/proton-clang
