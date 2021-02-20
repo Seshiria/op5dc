@@ -92,10 +92,10 @@ cd ./kernel/
 #Releases "`date +%Y%m%d`gcc-dc"
 
 #llvm build
+Patch
 make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                         ARCH=arm64 \
                         SUBARCH=arm64
-Patch
 make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
