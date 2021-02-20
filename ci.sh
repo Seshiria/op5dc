@@ -99,8 +99,8 @@ Patch
 make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
-                      CROSS_COMPILE=aarch64-linux-android- \
-                      CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+                      CROSS_COMPILE=aarch64-linux-gnu- \
+                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
                       PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
                       CC=clang \
                       AR=llvm-ar \
