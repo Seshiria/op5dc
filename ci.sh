@@ -91,7 +91,7 @@ make -j$(nproc --all) O=out \
                       SUBARCH=arm64 \
                       CROSS_COMPILE=aarch64-linux-android- \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH \
+                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH
 Releases "`date +%Y%m%d`gcc-dc-fix"
 
 #llvm build
