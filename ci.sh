@@ -18,7 +18,11 @@ Patch(){
 Releases(){
     #path to ./kernel/
     cp -f out/arch/arm64/boot/Image.gz-dtb ../AnyKernel3/Image.gz-dtb
-    bash ${GITHUB_WORKSPACE}/zip.sh ${1}
+    #一天可能提交编译多次
+    #用生成的文件的MD5来区分每次生成的文件
+    var=`md5sum ../AnyKernel3/Image.gz-dtb`
+    var=${var:0:5}
+    bash ${GITHUB_WORKSPACE}/zip.sh ${1}${var}
 }
 
 

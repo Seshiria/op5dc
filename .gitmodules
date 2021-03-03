@@ -13,7 +13,7 @@
 	ignore = dirty
 [submodule "llvm"]
 	path = llvm
-	url = https://github.com/kdrag0n/proton-clang
+	url = https://github.com/Seshiria/clang-r412851.git
 [submodule "android_prebuilts_build-tools"]
 	path = android_prebuilts_build-tools
 	url = https://github.com/LineageOS/android_prebuilts_build-tools.git
