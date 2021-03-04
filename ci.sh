@@ -65,6 +65,7 @@ make -j$(nproc --all) O=out \
                       CC=clang \
                       AR=llvm-ar \
                       NM=llvm-nm \
+                      AS=llvm-as \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip
