@@ -22,7 +22,7 @@ Releases(){
     #用生成的文件的MD5来区分每次生成的文件
     var=`md5sum ../AnyKernel3/Image.gz-dtb`
     var=${var:0:5}
-    bash ${GITHUB_WORKSPACE}/zip.sh ${1}${var}
+    bash ${GITHUB_WORKSPACE}/zip.sh ${1}_${var}
 }
 
 
