@@ -2,8 +2,8 @@
 #for github actions
 set -eu
 Initsystem(){
-    apt update && \
-    apt install -y \
+    sudo apt update && \
+    sudo apt install -y \
         gcc \
         libssl-dev
     #ghttps://github.com/LineageOS/android_prebuilts_build-tools
