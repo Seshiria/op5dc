@@ -43,30 +43,31 @@ Patch
 make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                         ARCH=arm64 \
                         SUBARCH=arm64
-make -j$(nproc --all) O=out \
+(make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
                       CROSS_COMPILE=aarch64-linux-android- \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH
-Releases "`date +%Y%m%d`gcc-dc-fix"
+                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH \
+)&& Releases "`date +%Y%m%d`gcc-dc-fix" || echo gcc build error
 
 #llvm build
 #Patch
 make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                         ARCH=arm64 \
                         SUBARCH=arm64
-make -j$(nproc --all) O=out \
+(make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
                       CROSS_COMPILE=aarch64-linux-gnu- \
                       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
                       PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
                       CC=clang \
+                      CXX=clang++ \
                       AR=llvm-ar \
                       NM=llvm-nm \
                       AS=llvm-as \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
-                      STRIP=llvm-strip
-Releases "`date +%Y%m%d`llvm-dc"
+                      STRIP=llvm-strip \
+)&& Releases "`date +%Y%m%d`llvm-dc" || echo "llvm build error"
