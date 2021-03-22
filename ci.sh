@@ -30,7 +30,7 @@ Initsystem
 mkdir releases
 cd ./kernel/
 
-sed -i "s/^KBUILD_CFLAGS   += -O3/KBUILD_CFLAGS   += -O2/" Makefile
+#sed -i "s/^KBUILD_CFLAGS   += -O3/KBUILD_CFLAGS   += -O2/" Makefile
 #尝试修复以下问题
 #由https://github.com/LineageOS/android_kernel_oneplus_msm8998/commit/1dc47f9e7d9de9f28628083ba8b14a0aa8d0c490 引入
 #提交把gcc 优化级别设置为-O3，导致CC时报错
@@ -49,7 +49,7 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       CROSS_COMPILE=aarch64-linux-android- \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi- \
                       PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH \
-)&& Releases "`date +%Y%m%d`gcc-dc-fix" || echo gcc build error
+)&& Releases "op5lin17-dc-gcc`date +%Y%m%d`" || echo "gcc build error"
 
 #llvm build
 #Patch
@@ -70,4 +70,4 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip \
-)&& Releases "`date +%Y%m%d`llvm-dc" || echo "llvm build error"
+)&& Releases "op5lin17-dc-llvm`date +%Y%m%d`" || echo "llvm build error"
