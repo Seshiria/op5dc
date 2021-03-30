@@ -40,19 +40,18 @@ cd ./kernel/
 Patch
 
 #gcc build
-make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
-                        ARCH=arm64 \
-                        SUBARCH=arm64
-(make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      SUBARCH=arm64 \
-                      CROSS_COMPILE=aarch64-linux-android- \
-                      CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH \
-)&& Releases "op5lin17-dc-gcc`date +%Y%m%d`" || echo "gcc build error"
+#make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
+#                        ARCH=arm64 \
+#                        SUBARCH=arm64
+#(make -j$(nproc --all) O=out \
+#                      ARCH=arm64 \
+#                      SUBARCH=arm64 \
+#                      CROSS_COMPILE=aarch64-linux-android- \
+#                      CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+#                      PATH=${GITHUB_WORKSPACE}/aarch64/bin:${GITHUB_WORKSPACE}/arm/bin:$PATH \
+#)&& Releases "op5lin17-dc-gcc`date +%Y%m%d`" || echo "gcc build error"
 
 #llvm build
-#Patch
 make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                         ARCH=arm64 \
                         SUBARCH=arm64
@@ -62,7 +61,7 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       CROSS_COMPILE=aarch64-linux-gnu- \
                       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
                       PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
-                      CC="clang -O3"\
+                      CC="clang"\
                       CXX=clang++ \
                       AR=llvm-ar \
                       NM=llvm-nm \
