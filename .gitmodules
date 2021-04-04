@@ -1,6 +1,6 @@
 [submodule "AnyKernel3"]
 	path = AnyKernel3
-	url = https://github.com/Seshiria/AnyKernel3
+	url = https://github.com/osm0sis/AnyKernel3
 [submodule "kernel"]
 	path = kernel
 	url = https://github.com/LineageOS/android_kernel_oneplus_msm8998

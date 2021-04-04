@@ -24,7 +24,8 @@ Releases(){
     var=${var:0:5}
     bash ${GITHUB_WORKSPACE}/zip.sh ${1}_${var}
 }
-
+#使用指定的anykernel配置文件
+cp ${GITHUB_WORKSPACE}/anykernel.sh ${GITHUB_WORKSPACE}/AnyKernel3/anykernel.sh
 
 Initsystem
 mkdir releases
@@ -48,7 +49,7 @@ cd ./kernel/
 #                      OBJCOPY=llvm-objcopy \
 #                      OBJDUMP=llvm-objdump \
 #                      STRIP=llvm-strip \
-#)&& Releases "op5lin17-llvm`date +%Y%m%d`" || echo "build error"
+#)&& Releases "op5lin18.1-llvm`date +%Y%m%d`" || echo "build error"
 
 ##dc patch
 Patch
@@ -70,4 +71,4 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip \
-)&& Releases "op5lin17-dc-llvm`date +%Y%m%d`" || echo "dc build error"
+)&& Releases "op5lin18.1-dc-llvm`date +%Y%m%d`" || echo "dc build error"

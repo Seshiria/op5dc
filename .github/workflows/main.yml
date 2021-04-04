@@ -18,7 +18,7 @@ jobs:
         uses: ncipollo/release-action@v1.7.3
         with:
           allowUpdates: true
-          tag: "lin17-autobulid"
+          tag: "autobulid"
           body: ${{ github.event.release.body }}
           prerelease: "true"
           artifacts: "releases/*.zip"
