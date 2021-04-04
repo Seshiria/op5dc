@@ -31,24 +31,24 @@ mkdir releases
 cd ./kernel/
 
 #llvm build
-make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
-                        ARCH=arm64 \
-                        SUBARCH=arm64
-(make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      SUBARCH=arm64 \
-                      CROSS_COMPILE=aarch64-linux-gnu- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
-                      CC="clang"\
-                      CXX=clang++ \
-                      AR=llvm-ar \
-                      NM=llvm-nm \
-                      AS=llvm-as \
-                      OBJCOPY=llvm-objcopy \
-                      OBJDUMP=llvm-objdump \
-                      STRIP=llvm-strip \
-)&& Releases "op5lin17-llvm`date +%Y%m%d`" || echo "build error"
+#make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
+#                        ARCH=arm64 \
+#                        SUBARCH=arm64
+#(make -j$(nproc --all) O=out \
+#                      ARCH=arm64 \
+#                      SUBARCH=arm64 \
+#                      CROSS_COMPILE=aarch64-linux-gnu- \
+#                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+#                      PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
+#                      CC="clang"\
+#                      CXX=clang++ \
+#                      AR=llvm-ar \
+#                      NM=llvm-nm \
+#                      AS=llvm-as \
+#                      OBJCOPY=llvm-objcopy \
+#                      OBJDUMP=llvm-objdump \
+#                      STRIP=llvm-strip \
+#)&& Releases "op5lin17-llvm`date +%Y%m%d`" || echo "build error"
 
 ##dc patch
 Patch
