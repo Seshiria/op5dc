@@ -22,7 +22,8 @@ Releases(){
     #用生成的文件的MD5来区分每次生成的文件
     var=`md5sum ../AnyKernel3/Image.gz-dtb`
     var=${var:0:5}
-    bash ${GITHUB_WORKSPACE}/zip.sh ${1}_${var}
+    var2=`head -n 3 ${GITHUB_WORKSPACE}/kernel/Makefile|awk '{print $3}'|tr -d '\n'`
+    bash ${GITHUB_WORKSPACE}/zip.sh ${1}_${var2}_testbuild_${var}
 }
 #使用指定的anykernel配置文件
 cp ${GITHUB_WORKSPACE}/anykernel.sh ${GITHUB_WORKSPACE}/AnyKernel3/anykernel.sh
@@ -30,6 +31,12 @@ cp ${GITHUB_WORKSPACE}/anykernel.sh ${GITHUB_WORKSPACE}/AnyKernel3/anykernel.sh
 Initsystem
 mkdir releases
 cd ./kernel/
+
+#Write flag
+touch localversion
+cat >localversion<<EOF
+~DCdimming-for-Seshiria
+EOF
 
 #llvm build
 #make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
