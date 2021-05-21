@@ -21,9 +21,10 @@ Releases(){
     #一天可能提交编译多次
     #用生成的文件的MD5来区分每次生成的文件
     var=`md5sum ../AnyKernel3/Image.gz-dtb`
-    var=${var:0:5}
-    var2=`head -n 3 ${GITHUB_WORKSPACE}/kernel/Makefile|awk '{print $3}'|tr -d '\n'`
-    bash ${GITHUB_WORKSPACE}/zip.sh ${1}_${var2}_testbuild_${var}
+    md5tab=${var:0:5}
+    kernelversion=`head -n 3 ${GITHUB_WORKSPACE}/kernel/Makefile|awk '{print $3}'|tr -d '\n'`
+    buildtime=`date +%Y%m%d`
+    bash ${GITHUB_WORKSPACE}/zip.sh ${1}-${kernelversion}_testbuild_${buildtime}_${md5sum}
 }
 #使用指定的anykernel配置文件
 cp ${GITHUB_WORKSPACE}/anykernel.sh ${GITHUB_WORKSPACE}/AnyKernel3/anykernel.sh
@@ -37,26 +38,6 @@ touch localversion
 cat >localversion<<EOF
 ~DCdimming-for-Seshiria
 EOF
-
-#llvm build
-#make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
-#                        ARCH=arm64 \
-#                        SUBARCH=arm64
-#(make -j$(nproc --all) O=out \
-#                      ARCH=arm64 \
-#                      SUBARCH=arm64 \
-#                      CROSS_COMPILE=aarch64-linux-gnu- \
-#                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-#                      PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
-#                      CC="clang"\
-#                      CXX=clang++ \
-#                      AR=llvm-ar \
-#                      NM=llvm-nm \
-#                      AS=llvm-as \
-#                      OBJCOPY=llvm-objcopy \
-#                      OBJDUMP=llvm-objdump \
-#                      STRIP=llvm-strip \
-#)&& Releases "op5lin18.1-llvm`date +%Y%m%d`" || echo "build error"
 
 ##dc patch
 Patch
@@ -78,4 +59,21 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip \
-)&& Releases "op5lin18.1-dc-llvm`date +%Y%m%d`" || echo "dc build error"
+)&& Releases "op5lin18.1-dc" || echo "dc build error"
+
+#optimization build 
+(make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      SUBARCH=arm64 \
+                      CROSS_COMPILE=aarch64-linux-gnu- \
+                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                      PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
+                      CC="clang -O3"\
+                      CXX=clang++ \
+                      AR=llvm-ar \
+                      NM=llvm-nm \
+                      AS=llvm-as \
+                      OBJCOPY=llvm-objcopy \
+                      OBJDUMP=llvm-objdump \
+                      STRIP=llvm-strip \
+)&& Releases "op5lin18.1-dc-opt" || echo "dc optimization build error"
