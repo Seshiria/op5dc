@@ -24,7 +24,7 @@ Releases(){
     md5tab=${var:0:5}
     kernelversion=`head -n 3 ${GITHUB_WORKSPACE}/kernel/Makefile|awk '{print $3}'|tr -d '\n'`
     buildtime=`date +%Y%m%d`
-    bash ${GITHUB_WORKSPACE}/zip.sh ${1}-${kernelversion}_testbuild_${buildtime}_${md5sum}
+    bash ${GITHUB_WORKSPACE}/zip.sh ${1}-${kernelversion}_testbuild_${buildtime}_${md5tab}
 }
 #使用指定的anykernel配置文件
 cp ${GITHUB_WORKSPACE}/anykernel.sh ${GITHUB_WORKSPACE}/AnyKernel3/anykernel.sh
