@@ -60,20 +60,3 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip \
 )&& Releases "op5lin18.1-dc" || echo "dc build error"
-
-#optimization build 
-(make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      SUBARCH=arm64 \
-                      CROSS_COMPILE=aarch64-linux-gnu- \
-                      CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-                      PATH=${GITHUB_WORKSPACE}/llvm/bin:$PATH \
-                      CC="clang -O3"\
-                      CXX=clang++ \
-                      AR=llvm-ar \
-                      NM=llvm-nm \
-                      AS=llvm-as \
-                      OBJCOPY=llvm-objcopy \
-                      OBJDUMP=llvm-objdump \
-                      STRIP=llvm-strip \
-)&& Releases "op5lin18.1-dc-opt" || echo "dc optimization build error"
