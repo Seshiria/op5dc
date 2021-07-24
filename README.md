@@ -9,16 +9,8 @@
 由于第三方内核在一加5、官方lineageOS 16上，出现WiFi不可用的问题，所以把DC调光移植回lineageOS官方内核。
 
 优点：跟随lineageOS维护的内核持续更新。
+
 缺点：仅包含官方功能。
-
-
-### 特性
-
-- [x] ~~WIFI在lineageOS 16直接可用~~（过时）
-- [x] DC调光
-- [x] ~~启用VPN后，待机时电量消耗（似乎来~~源于lineageOS的问题，已经由上游解决）
-- [ ] lineageOS18.0的内核源码，在lineageOS16的系统上，出现间接性的锁屏后双击唤醒失效（疑似llvm工具链编译的问题）
-- [ ] 激活小于5000ms的震动失效（源于上游）
 
 **本项目仅维护dc调光部分，其他问题如非必要、均不会尝试修正。**
 
@@ -36,7 +28,7 @@
 | 4.4.153 - 4.4.258 | X                          | O                        | X                       |
 | 4.4.258v2 and up  | O                          | X                        | X                       |
 
-注：O代表已经经过真机的兼容测试，X代表不兼容。
+注：O代表已经经过真机的兼容测试，X代表未经过测试。
 
 lineageOS16（Android9）最后经过测试的内核版本为4.4.153。
 
@@ -90,7 +82,7 @@ echo "CONFIG_FLICKER_FREE=y" >> arch/arm64/configs/lineage_oneplus5_defconfig
 make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                         ARCH=arm64 \
                         SUBARCH=arm64
-#或者使用llvm工具链编译
+#使用llvm工具链编译
 make -j$(nproc --all) O=out \
                       ARCH=arm64 \
                       SUBARCH=arm64 \
