@@ -14,6 +14,14 @@
 
 **本项目仅维护dc调光部分，其他问题如非必要、均不会尝试修正。**
 
+## 使用方法
+
+打开本项目的release页面，查找对应的内核版本，在recovery模式下刷入即可。
+
+控制器：https://github.com/aa889788/DC-Tuner/blob/master/app/release/DC%20tuner.apk
+
+**注意，一加5需要设置DC最小亮度为200以上。**
+
 ### 兼容性
 
 ~~**2020年12月31日：由于官方lineageOS主线已经切换到17.1，针对lineageOS16的测试已经结束，建议更新到最新的lineageOS版本。**~~ 
