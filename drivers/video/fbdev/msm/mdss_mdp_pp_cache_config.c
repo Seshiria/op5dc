@@ -650,7 +650,7 @@ static int pp_pcc_cache_params_v1_7(struct mdp_pcc_cfg_data *config,
 	u32 disp_num;
 	int ret = 0;
 	struct mdss_pp_res_type_v1_7 *res_cache;
-	struct mdp_pcc_data_v1_7 *v17_cache_data, v17_usr_config;, 
+	struct mdp_pcc_data_v1_7 *v17_cache_data, v17_usr_config;
 			*v17_user_data, *v17_real_data;
 
 	if (!config || !mdss_pp_res) {
