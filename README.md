@@ -113,5 +113,9 @@ zip -r9 ../releases/zip.zip * -x .git README.md *placeholder
 
 ````
 
+如果你想在本地使用``ci.sh``，请直接添加环境变量``GITHUB_WORKSPACE``
 
-
+````
+export GITHUB_WORKSPACE=${pwd}
+sh ci.sh
+````
