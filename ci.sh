@@ -59,4 +59,4 @@ make -j$(nproc --all) O=out lineage_oneplus5_defconfig \
                       OBJCOPY=llvm-objcopy \
                       OBJDUMP=llvm-objdump \
                       STRIP=llvm-strip \
-&& Releases "op5lin18.1-dc") || (echo "dc build error" && exit 1)
+&& Releases "op5lin19.1-dc") || (echo "dc build error" && exit 1)
