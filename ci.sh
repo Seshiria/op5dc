@@ -54,6 +54,7 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     SUBARCH=arm64 \
     CROSS_COMPILE=aarch64-linux-gnu- \
     CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
     HOSTCC=clang \
     HOSTCXX=clang++ \
     CC=clang \
