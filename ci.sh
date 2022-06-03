@@ -4,7 +4,7 @@ set -eu
 source submodules.conf
 #submodules
 sudo apt update && sudo apt install -y unzip tar wget 
-sh -x get-submodules.sh
+bash -x get-submodules.sh
 Initsystem() {
     sudo apt update &&
         sudo apt install -y \
