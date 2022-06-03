@@ -49,6 +49,20 @@ if [ ! -d "./android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-${ARM
     DOWNLOADER $ARM_GCC_URL arm_gcc-$ARM_GCC_HASH.zip
     $UNZIP arm_gcc-$ARM_GCC_HASH.zip
 fi
+# if prebuilts is not installed, install it
+if [ ! -d "./android_prebuilts_build-tools-${PREBUILTS_HASH}/linux-x86/bin/" ]; then
+    echo "clang is not installed, installing it"
+    #download clang and tar it
+    DOWNLOADER $PREBUILTS_URL prebuilts-$PREBUILTS_HASH.zip
+    $UNZIP prebuilts-$PREBUILTS_HASH.zip
+fi
+# if anykernel is not installed, install it
+if [ ! -d "./AnyKernel3-${ANYKERNEL_HASH}" ]; then
+    echo "anykernel3 is not installed, installing it"
+    #download anykernel and tar it
+    DOWNLOADER $ANYKERNEL_URL anykernel-$ANYKERNEL_HASH.zip
+    $UNZIP anykernel-$ANYKERNEL_HASH.zip
+fi
 # download kernel 
 if [ ! -d "./android_kernel_oneplus_msm8998-${KERNEL_HASH}" ]; then
     echo "kernel is not installed, installing it"
