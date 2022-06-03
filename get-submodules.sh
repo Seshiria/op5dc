@@ -1,0 +1,58 @@
+#!/bin/bash
+source submodules.conf
+#wget or curl
+DOWNLOADER() {
+    __download_url=$1
+    __download_name=$2
+    if [ -x "$(command -v wget)" ]; then
+        wget -O "${__download_name}" "${__download_url}"
+    elif [ -x "$(command -v curl)" ]; then
+        curl -L -k -o "${__download_name}" "${__download_url}"
+    else
+        echo "No downloader found, please install wget or curl"
+        exit 1
+    fi
+}
+# tar
+if [ -x "$(command -v tar)" ]; then
+    TAR="tar"
+else
+    echo "Error: tar is required"
+    exit 1
+fi
+# unzip
+if [ -x "$(command -v unzip)" ]; then
+    UNZIP="unzip"
+else
+    echo "Error: unzip is required"
+    exit 1
+fi
+# if llvm is not installed, install it
+if [ ! -d "./$LLVM_TAG/bin" ]; then
+    echo "llvm is not installed, installing it"
+    #download llvm and tar it
+    DOWNLOADER $LLVM_URL -O llvm.tar-$LLVM_TAG.gz
+    mkdir llvm
+    $TAR -zxvf llvm.tar-$LLVM_TAG.gz -C $LLVM_TAG
+fi
+# if aarch64 gcc is not installed, install it
+if [ ! -d "./android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-${AARCH64_GCC_HASH}/bin" ]; then
+    echo "aarch gcc is not installed, installing it"
+    #download aarch gcc and tar it
+    DOWNLOADER $AARCH64_GCC_URL aarch64_gcc-$AARCH64_GCC_HASH.zip
+    $UNZIP aarch64_gcc-$AARCH64_GCC_HASH.zip
+fi
+# if arm gcc is not installed, install it
+if [ ! -d "./android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-${ARM_GCC_HASH}/bin" ]; then
+    echo "arm gcc is not installed, installing it"
+    #download arm gcc and tar it
+    DOWNLOADER $ARM_GCC_URL arm_gcc-$ARM_GCC_HASH.zip
+    $UNZIP arm_gcc-$ARM_GCC_HASH.zip
+fi
+# download kernel 
+if [ ! -d "./android_kernel_oneplus_msm8998-${KERNEL_HASH}" ]; then
+    echo "kernel is not installed, installing it"
+    #download kernel and tar it
+    DOWNLOADER $KERNEL_URL kernel-$KERNEL_HASH.zip
+    $UNZIP kernel-$KERNEL_HASH.zip
+fi
