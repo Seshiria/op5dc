@@ -16,14 +16,14 @@ DOWNLOADER() {
 }
 # tar
 if [ -x "$(command -v tar)" ]; then
-    TAR="tar"
+    TAR="tar -q "
 else
     echo "Error: tar is required"
     exit 1
 fi
 # unzip
 if [ -x "$(command -v unzip)" ]; then
-    UNZIP="unzip"
+    UNZIP="unzip -q "
 else
     echo "Error: unzip is required"
     exit 1
