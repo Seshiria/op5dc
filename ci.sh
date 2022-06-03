@@ -4,8 +4,8 @@ set -eu
 Initsystem() {
     sudo apt update &&
         sudo apt install -y \
-            gcc \
-            libssl-dev
+            libssl-dev \
+            python
     #ghttps://github.com/LineageOS/android_prebuilts_build-tools
     export PATH=${GITHUB_WORKSPACE}/android_prebuilts_build-tools/path/linux-x86/:$PATH
     export PATH=${GITHUB_WORKSPACE}/android_prebuilts_build-tools/linux-x86/bin/:$PATH
@@ -44,14 +44,19 @@ Patch
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
-    SUBARCH=arm64
+    SUBARCH=arm64 \
+    HOSTCC=clang \
+    HOSTCXX=clang++
+
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
     SUBARCH=arm64 \
     CROSS_COMPILE=aarch64-linux-gnu- \
     CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
     PATH="${GITHUB_WORKSPACE}"/llvm/bin:"$PATH" \
-    CC="clang" \
+    HOSTCC=clang \
+    HOSTCXX=clang++ \
+    CC=clang \
     CXX=clang++ \
     AR=llvm-ar \
     NM=llvm-nm \
