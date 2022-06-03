@@ -6,7 +6,7 @@ DOWNLOADER() {
     __download_url=$1
     __download_name=$2
     if [ -x "$(command -v wget)" ]; then
-        wget -O "${__download_name}" "${__download_url}"
+        wget -q -O "${__download_name}" "${__download_url}"
     elif [ -x "$(command -v curl)" ]; then
         curl -L -k -o "${__download_name}" "${__download_url}"
     else
