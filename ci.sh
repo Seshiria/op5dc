@@ -36,7 +36,7 @@ cp "${GITHUB_WORKSPACE}"/anykernel.sh "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERN
 
 Initsystem
 mkdir releases
-cd ./kernel/
+cd ./android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/
 
 #Write flag
 touch localversion
