@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 source submodules.conf
 #wget or curl
 DOWNLOADER() {
