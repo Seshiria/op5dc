@@ -33,7 +33,7 @@ if [ ! -d "./$LLVM_TAG/bin" ]; then
     echo "llvm is not installed, installing it"
     #download llvm and tar it
     DOWNLOADER $LLVM_URL -O llvm.tar-$LLVM_TAG.gz
-    mkdir llvm
+    mkdir $LLVM_TAG
     $TAR -zxvf llvm.tar-$LLVM_TAG.gz -C $LLVM_TAG
 fi
 # if aarch64 gcc is not installed, install it
