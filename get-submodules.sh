@@ -16,7 +16,7 @@ DOWNLOADER() {
 }
 # tar
 if [ -x "$(command -v tar)" ]; then
-    TAR="tar -q "
+    TAR="tar"
 else
     echo "Error: tar is required"
     exit 1
