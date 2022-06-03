@@ -32,9 +32,9 @@ fi
 if [ ! -d "./$LLVM_TAG/bin" ]; then
     echo "llvm is not installed, installing it"
     #download llvm and tar it
-    DOWNLOADER $LLVM_URL -O llvm.tar-$LLVM_TAG.gz
+    DOWNLOADER $LLVM_URL llvm.tar-$LLVM_TAG.tar.gz
     mkdir $LLVM_TAG
-    $TAR -zxvf llvm.tar-$LLVM_TAG.gz -C $LLVM_TAG
+    $TAR -zxvf llvm.tar-$LLVM_TAG.tar.gz -C $LLVM_TAG
 fi
 # if aarch64 gcc is not installed, install it
 if [ ! -d "./android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-${AARCH64_GCC_HASH}/bin" ]; then
