@@ -36,7 +36,7 @@
 
 #### 系统与内核兼容性
 
-| 内核版本/系统版本   |lingageOS19.1(android12)    | lineageOS18.1（Android11） | lineageOS17（Android10） | lineageOS16（Android9） |
+| 内核版本/系统版本   |lineageOS19.1(android12)    | lineageOS18.1（Android11） | lineageOS17（Android10） | lineageOS16（Android9） |
 | ----------------- | --------------------------  | ------------------------ | ----------------------- | ----------------------- |
 | 4.4.153           | X                          | X                          | O                        | O                       |
 | 4.4.153 - 4.4.258 | X                          | X                          | O                        | X                       |
