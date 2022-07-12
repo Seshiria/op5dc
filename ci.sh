@@ -9,8 +9,7 @@ Initsystem() {
     sudo apt update &&
         sudo apt install -y \
             libssl-dev \
-            python \
-            gcc
+            python
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/linux-x86/bin/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/$LLVM_TAG/bin:"$PATH"
@@ -53,7 +52,9 @@ Patch
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
-    SUBARCH=arm64 
+    SUBARCH=arm64 \
+    HOSTCC=clang \
+    HOSTCXX=clang++
 
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
