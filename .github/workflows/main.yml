@@ -12,7 +12,7 @@ jobs:
         run: |
           bash -x ./ci.sh
       - name: upload release
-        uses: ncipollo/release-action@v1.7.3
+        uses: ncipollo/release-action@v1.10.0
         with:
           allowUpdates: true
           tag: "autobulid"
