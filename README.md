@@ -139,4 +139,5 @@ make -j"$(nproc --all)" O=out \
 * 工具链：https://github.com/LineageOS/android_prebuilts_build-tools
 * 交叉编译（llvm、clang）：https://developer.android.com/ndk/downloads
 * Anykernel3：https://github.com/osm0sis/AnyKernel3
+* 代码检出：https://github.com/actions/checkout
 * 自动发布：https://github.com/ncipollo/release-action
