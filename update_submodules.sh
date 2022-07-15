@@ -28,7 +28,7 @@ update_conf() {
         #写入配置文件
         cat > submodules.conf << EOF
 
-#ndk 23 clang-r437112b
+#ndk 24 clang-r437112b
 LLVM_TAG=$LLVM_TAG
 LLVM_URL=$LLVM_URL
 #aarch64 gcc 
