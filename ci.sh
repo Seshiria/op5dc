@@ -52,9 +52,7 @@ Patch
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
-    SUBARCH=arm64 \
-    HOSTCC=clang \
-    HOSTCXX=clang++
+    SUBARCH=arm64 
 
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
@@ -62,8 +60,6 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    HOSTCC=clang \
-    HOSTCXX=clang++ \
     CC=clang \
     CXX=clang++ \
     AR=llvm-ar \
