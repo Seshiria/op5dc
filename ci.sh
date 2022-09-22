@@ -9,13 +9,12 @@ Initsystem() {
     sudo apt update &&
         sudo apt install -y \
             libssl-dev \
-            python \
-            gcc
+            python
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/linux-x86/bin/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/$LLVM_TAG/bin:"$PATH"
-    #export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-"${AARCH64_GCC_HASH}"/bin:"$PATH"
-    #export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-"${ARM_GCC_HASH}"/bin:"$PATH"
+    export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-"${AARCH64_GCC_HASH}"/bin:"$PATH"
+    export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-"${ARM_GCC_HASH}"/bin:"$PATH"
 
 }
 
@@ -53,16 +52,18 @@ Patch
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
-    SUBARCH=arm64 
+    SUBARCH=arm64 \
+    HOSTCC=clang \
+    HOSTCXX=clang++
 
-export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-"${AARCH64_GCC_HASH}"/bin:"$PATH"
-export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-"${ARM_GCC_HASH}"/bin:"$PATH"
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
     SUBARCH=arm64 \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
+    HOSTCC=clang \
+    HOSTCXX=clang++ \
     CC=clang \
     CXX=clang++ \
     AR=llvm-ar \
