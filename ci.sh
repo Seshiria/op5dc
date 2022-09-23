@@ -30,7 +30,7 @@ Releases() {
     var=$(md5sum ../AnyKernel3-${ANYKERNEL_HASH}/Image.gz-dtb)
     md5tab=${var:0:5}
     kernelversion=$(head -n 3 "${GITHUB_WORKSPACE}"/android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/Makefile | awk '{print $3}' | tr -d '\n')
-    buildtime=$(date +%Y%m%d)
+    buildtime=$(date +%Y%m%d-%H%M%S)
     bash "${GITHUB_WORKSPACE}"/zip.sh "${1}"-"${kernelversion}"_testbuild_"${buildtime}"_"${md5tab}" "${GITHUB_WORKSPACE}"/AnyKernel3-"${ANYKERNEL_HASH}"
 }
 #使用指定的anykernel配置文件
