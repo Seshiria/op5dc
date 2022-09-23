@@ -32,8 +32,8 @@ Releases() {
     kernelversion=$(head -n 3 "${GITHUB_WORKSPACE}"/android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/Makefile | awk '{print $3}' | tr -d '\n')
     buildtime=$(date +%Y%m%d-%H%M%S)
     bash "${GITHUB_WORKSPACE}"/zip.sh "${1}"-"${kernelversion}"_testbuild_"${buildtime}"_"${md5tab}" "${GITHUB_WORKSPACE}"/AnyKernel3-"${ANYKERNEL_HASH}"
-    touch ../AnyKernel3-${ANYKERNEL_HASH}/buildinfo
-    cat > ../AnyKernel3-${ANYKERNEL_HASH}/buildinfo <<EOF
+    touch "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/buildinfo
+    cat > "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/buildinfo <<EOF
     buildtime ${buildtime}
     Image.gz-dtb hash ${md5}
 EOF
