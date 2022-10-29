@@ -58,7 +58,8 @@ Patch
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
     SUBARCH=arm64 \
-    LLVM=1
+    HOSTCC=clang \
+    HOSTCXX=clang++
 
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
@@ -66,5 +67,14 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    LLVM=1 &&
-    Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
+    HOSTCC=clang \
+    HOSTCXX=clang++ \
+    CC=clang \
+    CXX=clang++ \
+    AR=llvm-ar \
+    NM=llvm-nm \
+    AS=llvm-as \
+    OBJCOPY=llvm-objcopy \
+    OBJDUMP=llvm-objdump \
+    STRIP=llvm-strip &&
+    Releases "op5lin19.1-dc") || (echo "dc build error" && exit 1)
