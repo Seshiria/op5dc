@@ -2,7 +2,7 @@ name: Build lineageOS Kernel
 on:
   push:
     branches:
-      - master
+      - lin20
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -15,7 +15,7 @@ jobs:
         uses: ncipollo/release-action@v1.10.0
         with:
           allowUpdates: true
-          tag: "autobulid"
+          tag: "lin20-autobulid"
           body: ${{ github.event.release.body }}
           prerelease: "true"
           artifacts: "releases/*.zip"
