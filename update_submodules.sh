@@ -16,7 +16,7 @@ compare_hash() {
     _hash=$2
     eval _name_hash=\$"$_name"
     if [ -z "$_hash" ]; then
-        echo "no get hash"
+        echo "${_name} no get hash"
             elif [ "$_hash" != "${_name_hash}" ]; then
             eval "$_name"="$_hash"
             echo "update $_name"
