@@ -16,7 +16,7 @@ compare_hash() {
     _hash=$2
     eval _name_hash=\$"$_name"
     if [ -z "$_hash" ]; then
-        echo "no get hash"
+        echo "${_name} no get hash"
             elif [ "$_hash" != "${_name_hash}" ]; then
             eval "$_name"="$_hash"
             echo "update $_name"
@@ -55,6 +55,8 @@ up_hash=$(get_hash "LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-li
 compare_hash "AARCH64_GCC_HASH" "$up_hash"
 up_hash=$(get_hash "LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9" "${lineage_branch}")
 compare_hash "ARM_GCC_HASH" "$up_hash"
+up_hash=$(get_hash "LineageOS/android_prebuilts_build-tools" "${lineage_branch}")
+compare_hash "PREBUILTS_HASH" "$up_hash"
 up_hash=$(get_hash "LineageOS/android_kernel_oneplus_msm8998" "${lineage_branch}")
 compare_hash "KERNEL_HASH" "$up_hash"
 
