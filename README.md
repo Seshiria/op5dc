@@ -57,7 +57,9 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 
 ~~2021年4月1日：官方lineageOS18.1已经发布，所有测试迁移到Android11，建议更新到最新的lineageOS版本。~~ 
 
-**2022年5月23日：官方lineageOS19.1已经发布，所有测试迁移到Android12，请更新到最新的lineageOS版本。**
+~~2022年5月23日：官方lineageOS19.1已经发布，所有测试迁移到Android12，请更新到最新的lineageOS版本。~~
+
+**2023年1月2日，官方lineagesOS20.0已经发布，所有测试迁移到Android13，请更新到最新的lineageOS版本。**
 
 #### 系统与内核兼容性
 
@@ -66,8 +68,8 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 |lineageOS16(Android9)| 4.4.153 |
 |lineageOS17(Android10)| 4.4.153 - 4.4.258 |
 |lineageOS18.1(Android11)| 4.4.258v2 - 4.4.302v2 |
-|lineageOS19.1(android12)| 4.4.302v3 and up |
-|lineageOS20(android13)| 待定 |
+|lineageOS19.1(android12)| 4.4.302v3 - 4.4.302v20221205 |
+|lineageOS20(android13)| 4.4.302v20230102 and up |
 
 
 注：O代表已经经过真机的兼容测试，X代表未经过测试。
