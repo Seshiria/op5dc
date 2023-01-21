@@ -17,7 +17,7 @@
 
 刷入前建议备份当前boot.img。打开本项目的release页面，根据tag查找对应的内核版本，在recovery模式下刷入，然后进入系统安装下方的控制器软件。
 
-控制器：https://github.com/aa889788/DC-Tuner/blob/master/app/release/DC%20tuner.apk
+控制器：[DC%20tuner.apk](https://github.com/Seshiria/op5dc/releases/download/4.4.302v20230102/DC.Tuner.1.0.apk)
 
 **注意，一加5需要设置DC最小亮度为200以上。**
 
