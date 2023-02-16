@@ -64,6 +64,13 @@ if [ ! -d "./AnyKernel3-${ANYKERNEL_HASH}" ]; then
     DOWNLOADER $ANYKERNEL_URL anykernel-$ANYKERNEL_HASH.zip
     $UNZIP anykernel-$ANYKERNEL_HASH.zip
 fi
+# if kenrelsu is not installed, install it
+if [ ! -d "./kernelsu-${KERNELSU_HASH}" ]; then
+    echo "kernelsu is not installed, installing it"
+    #download anykernel and tar it
+    DOWNLOADER $KERNELSU_URL kernelsu-$KERNELSU_HASH.zip
+    $UNZIP kernelsu-$KERNELSU_HASH.zip
+fi
 # download kernel 
 if [ ! -d "./android_kernel_oneplus_msm8998-${KERNEL_HASH}" ]; then
     echo "kernel is not installed, installing it"
