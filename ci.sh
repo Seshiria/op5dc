@@ -27,6 +27,22 @@ Patch() {
     cp -R ../drivers/* ./drivers/
     echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
+Patch_ksu() {
+    test -d KernelSU || mkdir kernelsu
+    cp -R ../KernelSU-$KERNELSU_HASH/* ./KernelSU/
+    #source  https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh
+    GKI_ROOT=$(pwd)
+    DRIVER_DIR="$GKI_ROOT/drivers"
+    test -e "$DRIVER_DIR/kernelsu" || ln -sf "$GKI_ROOT/KernelSU/kernel" "$DRIVER_DIR/kernelsu"
+    DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+    grep -q "kernelsu" "$DRIVER_MAKEFILE" || echo "obj-y += kernelsu/" >>"$DRIVER_MAKEFILE"
+    #额外的修补
+    echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    echo "CONFIG_HAVE_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    echo "CONFIG_KPROBE_EVENTS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    #修补kernelsu/makefile
+    ##todo
+}
 Releases() {
     #path to ./kernel/
     cp -f out/arch/arm64/boot/Image.gz-dtb ../AnyKernel3-${ANYKERNEL_HASH}/Image.gz-dtb
@@ -73,3 +89,20 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 &&
     Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
+
+
+##kernelsu
+Patch_ksu
+make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    LLVM=1
+
+(make -j"$(nproc --all)" O=out \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    CROSS_COMPILE=aarch64-linux-android- \
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
+    LLVM=1 &&
+    Releases "op5lin20-dc-ksu") || (echo "ksu build error" && exit 1)
