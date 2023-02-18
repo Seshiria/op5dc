@@ -42,12 +42,12 @@ EOF
 cp "${GITHUB_WORKSPACE}"/anykernel.sh "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/anykernel.sh
 
 Initsystem
-mkdir releases
+test -d releases || mkdir releases
 ls -lh
 cd ./android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/
 
 #Write flag
-touch localversion
+test -f localversion || touch localversion
 cat >localversion <<EOF
 ~DCdimming-for-Seshiria
 EOF
