@@ -11,7 +11,8 @@ Initsystem() {
             libssl-dev \
             python2 \
             libc6-dev \
-            binutils
+            binutils \
+            zip
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/linux-x86/bin/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/$LLVM_TAG/bin:"$PATH"
