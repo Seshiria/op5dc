@@ -13,6 +13,8 @@ Initsystem() {
             libc6-dev \
             binutils \
             zip
+    # fix aarch64-linux-android-4.9-gcc 从固定的位置获取python
+    test -f /usr/bin/python || ln /usr/bin/python /usr/bin/python2
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/linux-x86/bin/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/$LLVM_TAG/bin:"$PATH"
