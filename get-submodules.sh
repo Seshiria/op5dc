@@ -65,7 +65,7 @@ if [ ! -d "./AnyKernel3-${ANYKERNEL_HASH}" ]; then
     $UNZIP anykernel-$ANYKERNEL_HASH.zip
 fi
 # if kenrelsu is not installed, install it
-if [ ! -d "./kernelsu-${KERNELSU_HASH}" ]; then
+if [ ! -d "./KernelSU-${KERNELSU_HASH}" ]; then
     echo "kernelsu is not installed, installing it"
     #download anykernel and tar it
     DOWNLOADER $KERNELSU_URL kernelsu-$KERNELSU_HASH.zip
