@@ -12,6 +12,7 @@ Initsystem() {
             python2 \
             libc6-dev \
             binutils \
+            libgcc-11-dev \
             zip
     # fix aarch64-linux-android-4.9-gcc 从固定的位置获取python
     test -f /usr/bin/python || ln /usr/bin/python /usr/bin/python2
