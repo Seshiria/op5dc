@@ -26,7 +26,7 @@ Initsystem() {
 
 Patch() {
     cp -R ../drivers/* ./drivers/
-    echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Patch_ksu() {
     test -d KernelSU || mkdir kernelsu
@@ -38,9 +38,10 @@ Patch_ksu() {
     DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
     grep -q "kernelsu" "$DRIVER_MAKEFILE" || echo "obj-y += kernelsu/" >>"$DRIVER_MAKEFILE"
     #额外的修补
-    echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
-    echo "CONFIG_HAVE_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
-    echo "CONFIG_KPROBE_EVENTS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
+        echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig && \
+        echo "CONFIG_HAVE_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig && \
+        echo "CONFIG_KPROBE_EVENTS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ##todo
 }
