@@ -29,7 +29,7 @@ Patch() {
     grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Patch_ksu() {
-    test -d KernelSU || mkdir kernelsu
+    test -d KernelSU || mkdir KernelSU
     cp -R ../KernelSU-$KERNELSU_HASH/* ./KernelSU/
     #source  https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh
     GKI_ROOT=$(pwd)
