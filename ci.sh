@@ -46,6 +46,8 @@ Patch_ksu() {
                     sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>  KernelSU/kernel/Makefile
     echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >> KernelSU/kernel/Makefile
+    #拷贝修补后的文件
+    cp -R ../ksu_patch/* ./
 }
 Releases() {
     #path to ./kernel/
