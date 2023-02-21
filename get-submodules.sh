@@ -1,18 +1,12 @@
 #!/bin/bash
 set -eu
 source submodules.conf
+(command -v unzip && command -v wget ) || apt install unzip  wget -y
 #wget or curl
 DOWNLOADER() {
     __download_url=$1
     __download_name=$2
-    if [ -x "$(command -v wget)" ]; then
-        wget -q -O "${__download_name}" "${__download_url}"
-    elif [ -x "$(command -v curl)" ]; then
-        curl -L -k -o "${__download_name}" "${__download_url}"
-    else
-        echo "No downloader found, please install wget or curl"
-        exit 1
-    fi
+    wget -c -N -q -O "${__download_name}" "${__download_url}"
 }
 # tar
 if [ -x "$(command -v tar)" ]; then
