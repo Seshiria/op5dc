@@ -39,11 +39,13 @@ Patch_ksu() {
     grep -q "kernelsu" "$DRIVER_MAKEFILE" || echo "obj-y += kernelsu/" >>"$DRIVER_MAKEFILE"
     #额外的修补
     grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
-        echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig && \
-        echo "CONFIG_HAVE_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig && \
-        echo "CONFIG_KPROBE_EVENTS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+        echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
-    ##todo
+    ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
+    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH"| \
+                    sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
+    echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>  KernelSU/kernel/Makefile
+    echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >> KernelSU/kernel/Makefile
 }
 Releases() {
     #path to ./kernel/
