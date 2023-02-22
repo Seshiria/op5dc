@@ -1,7 +1,8 @@
 #!/bin/bash
 set -eu
 source submodules.conf
-(command -v unzip && command -v wget ) || apt install unzip  wget -y
+(command -v unzip && command -v wget && command -v tar ) || \
+    apt install unzip  wget  tar -y
 #wget or curl
 DOWNLOADER() {
     __download_url=$1

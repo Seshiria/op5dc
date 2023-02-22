@@ -1,19 +1,20 @@
 #!/bin/bash
 #for github actions
 set -eu
+apt update 
+command -v sudo || \
+    apt install -y sudo
 source submodules.conf
 #submodules
-sudo apt update && sudo apt install -y unzip tar wget 
 bash -x get-submodules.sh
 Initsystem() {
-    sudo apt update &&
-        sudo apt install -y \
-            libssl-dev \
-            python2 \
-            libc6-dev \
-            binutils \
-            libgcc-11-dev \
-            zip
+    sudo apt install -y \
+        libssl-dev \
+        python2 \
+        libc6-dev \
+        binutils \
+        libgcc-11-dev \
+        zip
     # fix aarch64-linux-android-4.9-gcc 从固定的位置获取python
     test -f /usr/bin/python || ln /usr/bin/python2 /usr/bin/python
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
