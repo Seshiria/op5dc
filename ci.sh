@@ -2,10 +2,10 @@
 #for github actions
 set -eu
 if command -v sudo ;then
+    sudo apt update
+else
     apt update
     apt install -y sudo
-else
-    sudo apt update
 fi
 source submodules.conf
 #submodules
