@@ -1,9 +1,12 @@
 #!/bin/bash
 #for github actions
 set -eu
-apt update 
-command -v sudo || \
+if command -v sudo ;then
+    apt update
     apt install -y sudo
+else
+    sudo apt update
+fi
 source submodules.conf
 #submodules
 bash -x get-submodules.sh
