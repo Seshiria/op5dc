@@ -50,6 +50,8 @@ Patch_ksu() {
                     sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>  KernelSU/kernel/Makefile
     echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >> KernelSU/kernel/Makefile
+    #KernelSU/kernel/ksu.h :10
+    KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200 ) #major * 10000 + git version + 200 
     #拷贝修补后的文件
     cp -R ../ksu_patch/* ./
 }
@@ -115,4 +117,4 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 && 
-    Releases "op5lin20-dc-ksu$KSU_GIT_VERSION") || (echo "ksu build error" && exit 1)
+    Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
