@@ -29,7 +29,8 @@ Initsystem() {
 }
 
 Patch() {
-    cp -R ../drivers/* ./drivers/
+    #cp -R ../drivers/* ./drivers/
+    patch -p1 < ../dc_patch/dc_patch.diff
     grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Patch_ksu() {
@@ -53,7 +54,9 @@ Patch_ksu() {
     #KernelSU/kernel/ksu.h :10
     KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200 ) #major * 10000 + git version + 200 
     #拷贝修补后的文件
-    cp -R ../ksu_patch/* ./
+    #cp -R ../ksu_patch/* ./
+    patch -p1 < ../ksu_patch/ksu_patch.diff
+
 }
 Releases() {
     #path to ./kernel/
