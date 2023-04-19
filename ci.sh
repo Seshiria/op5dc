@@ -41,7 +41,7 @@ Patch_ksu() {
     DRIVER_DIR="$GKI_ROOT/drivers"
     test -e "$DRIVER_DIR/kernelsu" || ln -sf "$GKI_ROOT/KernelSU/kernel" "$DRIVER_DIR/kernelsu"
     DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-    grep -q "kernelsu" "$DRIVER_MAKEFILE" || echo "obj-y += kernelsu/" >>"$DRIVER_MAKEFILE"
+    grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >> "$DRIVER_MAKEFILE"
     #额外的修补
     grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
         echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
