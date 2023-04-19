@@ -28,7 +28,7 @@ Initsystem() {
 
 }
 
-Patch() {
+Patch_dc() {
     #cp -R ../drivers/* ./drivers/
     patch -p1 < ../dc_patch/dc_patch.diff
     grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
@@ -89,7 +89,7 @@ cat >localversion <<EOF
 EOF
 
 ##dc patch
-Patch
+Patch_dc
 #llvm dc build
 #make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
 #    ARCH=arm64 \
