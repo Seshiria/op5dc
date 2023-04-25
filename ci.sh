@@ -1,15 +1,25 @@
 #!/bin/bash
 #for github actions
 set -eu
+if command -v sudo ;then
+    sudo apt update
+else
+    apt update
+    apt install -y sudo
+fi
 source submodules.conf
 #submodules
-sudo apt update && sudo apt install -y unzip tar wget 
 bash -x get-submodules.sh
 Initsystem() {
-    sudo apt update &&
-        sudo apt install -y \
-            libssl-dev \
-            python
+    sudo apt install -y \
+        libssl-dev \
+        python2 \
+        libc6-dev \
+        binutils \
+        libgcc-11-dev \
+        zip
+    # fix aarch64-linux-android-4.9-gcc 从固定的位置获取python
+    test -f /usr/bin/python || ln /usr/bin/python2 /usr/bin/python
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/path/linux-x86/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/android_prebuilts_build-tools-"${PREBUILTS_HASH}"/linux-x86/bin/:$PATH
     export PATH="${GITHUB_WORKSPACE}"/$LLVM_TAG/bin:"$PATH"
@@ -18,9 +28,35 @@ Initsystem() {
 
 }
 
-Patch() {
-    cp -R ../drivers/* ./drivers/
-    echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+Patch_dc() {
+    #cp -R ../drivers/* ./drivers/
+    patch -p1 < ../dc_patch/dc_patch.diff
+    grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+}
+Patch_ksu() {
+    test -d KernelSU || mkdir KernelSU
+    cp -R ../KernelSU-$KERNELSU_HASH/* ./KernelSU/
+    #source  https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh
+    GKI_ROOT=$(pwd)
+    DRIVER_DIR="$GKI_ROOT/drivers"
+    test -e "$DRIVER_DIR/kernelsu" || ln -sf "$GKI_ROOT/KernelSU/kernel" "$DRIVER_DIR/kernelsu"
+    DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+    grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >> "$DRIVER_MAKEFILE"
+    #额外的修补
+    grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
+        echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    #修补kernelsu/makefile
+    ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
+    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH"| \
+                    sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
+    echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>  KernelSU/kernel/Makefile
+    echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >> KernelSU/kernel/Makefile
+    #KernelSU/kernel/ksu.h :10
+    KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200 ) #major * 10000 + git version + 200 
+    #拷贝修补后的文件
+    #cp -R ../ksu_patch/* ./
+    patch -p1 < ../ksu_patch/ksu_patch.diff
+
 }
 Releases() {
     #path to ./kernel/
@@ -42,24 +78,23 @@ EOF
 cp "${GITHUB_WORKSPACE}"/anykernel.sh "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/anykernel.sh
 
 Initsystem
-mkdir releases
+test -d releases || mkdir releases
 ls -lh
 cd ./android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/
 
 #Write flag
-touch localversion
+test -f localversion || touch localversion
 cat >localversion <<EOF
 ~DCdimming-for-Seshiria
 EOF
 
 ##dc patch
-Patch
+Patch_dc
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
     SUBARCH=arm64 \
-    HOSTCC=clang \
-    HOSTCXX=clang++
+    LLVM=1
 
 (make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
@@ -67,14 +102,22 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    HOSTCC=clang \
-    HOSTCXX=clang++ \
-    CC=clang \
-    CXX=clang++ \
-    AR=llvm-ar \
-    NM=llvm-nm \
-    AS=llvm-as \
-    OBJCOPY=llvm-objcopy \
-    OBJDUMP=llvm-objdump \
-    STRIP=llvm-strip &&
+    LLVM=1 &&
     Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
+
+
+##kernelsu
+Patch_ksu
+make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    LLVM=1
+
+(make -j"$(nproc --all)" O=out \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    CROSS_COMPILE=aarch64-linux-android- \
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
+    LLVM=1 && 
+    Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)

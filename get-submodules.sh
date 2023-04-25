@@ -1,18 +1,13 @@
 #!/bin/bash
 set -eu
 source submodules.conf
+(command -v unzip && command -v wget && command -v tar ) || \
+    apt install unzip  wget  tar -y
 #wget or curl
 DOWNLOADER() {
     __download_url=$1
     __download_name=$2
-    if [ -x "$(command -v wget)" ]; then
-        wget -q -O "${__download_name}" "${__download_url}"
-    elif [ -x "$(command -v curl)" ]; then
-        curl -L -k -o "${__download_name}" "${__download_url}"
-    else
-        echo "No downloader found, please install wget or curl"
-        exit 1
-    fi
+    wget -c -N -q -O "${__download_name}" "${__download_url}"
 }
 # tar
 if [ -x "$(command -v tar)" ]; then
@@ -63,6 +58,13 @@ if [ ! -d "./AnyKernel3-${ANYKERNEL_HASH}" ]; then
     #download anykernel and tar it
     DOWNLOADER $ANYKERNEL_URL anykernel-$ANYKERNEL_HASH.zip
     $UNZIP anykernel-$ANYKERNEL_HASH.zip
+fi
+# if kenrelsu is not installed, install it
+if [ ! -d "./KernelSU-${KERNELSU_HASH}" ]; then
+    echo "kernelsu is not installed, installing it"
+    #download anykernel and tar it
+    DOWNLOADER $KERNELSU_URL kernelsu-$KERNELSU_HASH.zip
+    $UNZIP kernelsu-$KERNELSU_HASH.zip
 fi
 # download kernel 
 if [ ! -d "./android_kernel_oneplus_msm8998-${KERNEL_HASH}" ]; then

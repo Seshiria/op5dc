@@ -1,0 +1,1046 @@
+diff --git a/drivers/video/fbdev/msm/Kconfig b/drivers/video/fbdev/msm/Kconfig
+index f7f1c47..f61be89 100644
+--- a/drivers/video/fbdev/msm/Kconfig
++++ b/drivers/video/fbdev/msm/Kconfig
+@@ -171,4 +171,19 @@ config IRIS2P_DRC_SUPPORT
+ 	Say y to enable
+ #endif
+ 
++config FB_MSM_MDSS_KCAL_CTRL
++	depends on FB_MSM_MDSS
++	bool "MDSS color control"
++	default n
++	---help---
++	Enable sysfs for rgb/lut control for mdss-mdp display controllers
++	in the MDSS sub-system.
++
++config FLICKER_FREE
++	bool "Enable flicker free driver"
++	depends on FB_MSM_MDSS
++	---help---
++	The flicker free provides flicker free function without change
++	panel hardware brightness to avoid PWM flicker on OLED devices.
++
+ endif
+diff --git a/drivers/video/fbdev/msm/Makefile b/drivers/video/fbdev/msm/Makefile
+index 6483727..078a879 100644
+--- a/drivers/video/fbdev/msm/Makefile
++++ b/drivers/video/fbdev/msm/Makefile
+@@ -31,6 +31,8 @@ ifeq ($(CONFIG_FB_MSM_MDSS),y)
+ obj-$(CONFIG_DEBUG_FS) += mdss_debug.o mdss_debug_xlog.o
+ endif
+ 
++obj-$(CONFIG_FLICKER_FREE) += flicker_free.o flicker_free_enabler.o
++
+ mdss-dsi-objs := mdss_dsi.o mdss_dsi_host.o mdss_dsi_cmd.o mdss_dsi_status.o
+ mdss-dsi-objs += mdss_dsi_panel.o
+ mdss-dsi-objs += msm_mdss_io_8974.o
+@@ -68,3 +70,5 @@ obj-$(CONFIG_FB_MSM_QPIC_ILI_QVGA_PANEL) += qpic_panel_ili_qvga.o
+ 
+ obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o mdss_util.o
+ obj-$(CONFIG_COMPAT) += mdss_compat_utils.o
++
++obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o
+diff --git a/drivers/video/fbdev/msm/flicker_free.c b/drivers/video/fbdev/msm/flicker_free.c
+new file mode 100644
+index 0000000..d1f2a32
+--- /dev/null
++++ b/drivers/video/fbdev/msm/flicker_free.c
+@@ -0,0 +1,312 @@
++/*
++ * An flicker free driver based on Qcom MDSS for OLED devices
++ *
++ * Copyright (C) 2012-2014, The Linux Foundation. All rights reserved.
++ * Copyright (C) Sony Mobile Communications Inc. All rights reserved.
++ * Copyright (C) 2014-2018, AngeloGioacchino Del Regno <kholk11@gmail.com>
++ * Copyright (C) 2018, Devries <therkduan@gmail.com>
++ * Copyright (C) 2019-2020, Tanish <tanish2k09.dev@gmail.com>
++ * Copyright (C) 2020, shxyke <shxyke@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/init.h>
++#include <linux/rtc.h>
++#include <linux/timer.h>
++#include <linux/kernel.h>
++#include <linux/delay.h>
++
++#include "flicker_free.h"
++#include "mdss_fb.h"
++#include "mdss_mdp.h"
++
++struct mdss_panel_data *pdata;
++struct mdp_pcc_cfg_data pcc_config;
++struct mdp_pcc_data_v1_7 *payload;
++struct mdp_dither_cfg_data dither_config;
++struct mdp_dither_data_v1_7 *dither_payload;
++u32 copyback = 0;
++u32 dither_copyback = 0;
++static u32 backlight = 0;
++static const u32 pcc_depth[9] = {128,256,512,1024,2048,4096,8192,16384,32768};
++static u32 depth = 8;
++static bool pcc_enabled = false;
++static bool mdss_backlight_enable = false;
++
++static int bkl_to_pcc[BACKLIGHT_INDEX] = {42, 56, 67, 75, 84, 91, 98, 104,
++	109, 114, 119, 124, 128, 133, 136, 140, 143, 146, 150, 152, 156, 159,
++	162, 165, 168, 172, 176, 178, 181, 184, 187, 189, 192, 194, 196, 199,
++	202, 204, 206, 209, 211, 213, 215, 217, 220, 222, 224, 226, 228, 230,
++	233, 236, 237, 239, 241, 241, 243, 245, 246, 249, 249, 250, 252, 254, 255, 256};
++
++/* Constants - Customize as needed */
++static int elvss_off_threshold = 66; /* Minimum backlight value that does not flicker */
++
++static struct delayed_work back_to_backlight_work;
++static void back_to_backlight(struct work_struct *work)
++{
++		pdata = dev_get_platdata(&get_mfd_copy()->pdev->dev);
++		pdata->set_backlight(pdata,backlight);
++		return;
++}
++
++static int flicker_free_push_dither(int depth)
++{
++	dither_config.flags = mdss_backlight_enable ?
++		MDP_PP_OPS_WRITE | MDP_PP_OPS_ENABLE :
++			MDP_PP_OPS_WRITE | MDP_PP_OPS_DISABLE;
++	dither_config.r_cr_depth = depth;
++	dither_config.g_y_depth = depth;
++	dither_config.b_cb_depth = depth;
++	dither_payload->len = 0;
++	dither_payload->temporal_en = 0;
++	dither_payload->r_cr_depth = dither_config.r_cr_depth;
++	dither_payload->g_y_depth = dither_config.g_y_depth;
++	dither_payload->b_cb_depth = dither_config.b_cb_depth;
++	dither_config.cfg_payload = dither_payload;
++
++	return mdss_mdp_dither_config(get_mfd_copy(),&dither_config,&dither_copyback,1);
++}
++
++static int flicker_free_push_pcc(int temp)
++{
++	pcc_config.ops = pcc_enabled ? 
++		MDP_PP_OPS_WRITE | MDP_PP_OPS_ENABLE :
++			MDP_PP_OPS_WRITE | MDP_PP_OPS_DISABLE;
++	pcc_config.r.r = temp;
++	pcc_config.g.g = temp;
++	pcc_config.b.b = temp;
++	payload->r.r = pcc_config.r.r;
++	payload->g.g = pcc_config.g.g;
++	payload->b.b = pcc_config.b.b;
++	pcc_config.cfg_payload = payload;
++	
++	return mdss_mdp_kernel_pcc_config(get_mfd_copy(), &pcc_config, &copyback);
++}
++
++static int set_brightness(int backlight)
++{
++	uint32_t temp = 0;
++	backlight = clamp_t(int, ((backlight-1)*(BACKLIGHT_INDEX-1)/(elvss_off_threshold-1)+1), 1, BACKLIGHT_INDEX);
++	temp = clamp_t(int, 0x80*bkl_to_pcc[backlight - 1], FF_MIN_SCALE, FF_MAX_SCALE);
++	for (depth = 8;depth >= 1;depth--){
++		if(temp >= pcc_depth[depth]) break;
++	}
++	flicker_free_push_dither(depth);
++	return flicker_free_push_pcc(temp);
++}
++
++u32 mdss_panel_calc_backlight(u32 bl_lvl)
++{
++	if (mdss_backlight_enable && bl_lvl != 0 && bl_lvl < elvss_off_threshold) {
++		pr_debug("flicker free mode on\n");
++		pr_debug("elvss_off = %d\n", elvss_off_threshold);
++		pcc_enabled = true;
++		if(!set_brightness(bl_lvl))
++			return elvss_off_threshold;
++	}else{
++		if(bl_lvl && pcc_enabled){
++			pcc_enabled = false;
++			set_brightness(elvss_off_threshold);
++		}
++	}
++	return bl_lvl;
++}
++
++
++void set_flicker_free(bool enabled)
++{
++	if(mdss_backlight_enable == enabled) return;
++	mdss_backlight_enable = enabled;
++	if (get_mfd_copy())
++		pdata = dev_get_platdata(&get_mfd_copy()->pdev->dev);
++	else return;
++	if (enabled){
++		if ((pdata) && (pdata->set_backlight)){
++			backlight = mdss_panel_calc_backlight(get_bkl_lvl()); 
++			cancel_delayed_work_sync(&back_to_backlight_work);
++			schedule_delayed_work(&back_to_backlight_work, msecs_to_jiffies(RET_WORKGROUND_DELAY));
++		}else return;
++	}else{
++		if ((pdata) && (pdata->set_backlight)){
++			backlight = get_bkl_lvl();
++			pdata->set_backlight(pdata,backlight);
++			mdss_panel_calc_backlight(backlight);
++		}else return;
++	}
++} 
++
++void set_elvss_off_threshold(int value)
++{
++	elvss_off_threshold = value;
++}
++
++int get_elvss_off_threshold(void)
++{
++	return elvss_off_threshold;
++}
++
++bool if_flicker_free_enabled(void)
++{
++	return mdss_backlight_enable;
++}
++
++static u32 pcc_rescale(u32 raw, u32 user)
++{
++	u32 val = 0;
++
++	if (raw == 0 || raw > 32768)
++		raw = 32768;
++	if (user == 0 || user > 32768)
++		user = 32768;
++	val = (raw * user) / 32768;
++	return val < 2560 ? 2560 : val;
++}
++
++void pcc_v1_7_combine(struct mdp_pcc_data_v1_7 **raw,
++		struct mdp_pcc_data_v1_7 **user,
++		struct mdp_pcc_data_v1_7 **real)
++{
++	struct mdp_pcc_data_v1_7 *real_cpy;
++	real_cpy = kzalloc(sizeof(struct mdp_pcc_data_v1_7), GFP_USER);
++	if (!(*real)) {
++		*real = kzalloc(sizeof(struct mdp_pcc_data_v1_7), GFP_USER);
++		if (!(*real)) {
++			pr_err("%s: alloc failed!", __func__);
++			return;
++		}
++	}
++	if((*raw)&&(*user)){
++		real_cpy->r.c = (*user)->r.c? pcc_rescale((*raw)->r.r, (*user)->r.c)*3/4: 0;
++		real_cpy->r.r = (*user)->r.g? pcc_rescale((*raw)->r.r, (*user)->r.r)*3/4: pcc_rescale((*raw)->r.r, (*user)->r.r);
++		real_cpy->r.g = (*user)->r.g? pcc_rescale((*raw)->r.r, (*user)->r.g)*3/4: 0;
++		real_cpy->r.b = (*user)->r.b? pcc_rescale((*raw)->r.r, (*user)->r.b)*3/4: 0;
++		real_cpy->r.rg = (*user)->r.rg? pcc_rescale((*raw)->r.r, (*user)->r.rg)*3/4: 0;
++		real_cpy->r.gb = (*user)->r.gb? pcc_rescale((*raw)->r.r, (*user)->r.gb)*3/4: 0;
++		real_cpy->r.rb = (*user)->r.rb? pcc_rescale((*raw)->r.r, (*user)->r.rb)*3/4: 0;
++		real_cpy->r.rgb = (*user)->r.rgb? pcc_rescale((*raw)->r.r, (*user)->r.rgb)*3/4: 0;
++		real_cpy->g.c = (*user)->g.c? pcc_rescale((*raw)->r.r, (*user)->g.c)*3/4: 0;
++		real_cpy->g.g = (*user)->g.r? pcc_rescale((*raw)->r.r, (*user)->g.g)*3/4: pcc_rescale((*raw)->r.r, (*user)->g.g);
++		real_cpy->g.r = (*user)->g.r? pcc_rescale((*raw)->r.r, (*user)->g.r)*3/4: 0;
++		real_cpy->g.b = (*user)->g.b? pcc_rescale((*raw)->r.r, (*user)->g.b)*3/4: 0;
++		real_cpy->g.rg = (*user)->g.rg? pcc_rescale((*raw)->r.r, (*user)->g.rg)*3/4: 0;
++		real_cpy->g.gb = (*user)->g.gb? pcc_rescale((*raw)->r.r, (*user)->g.gb)*3/4: 0;
++		real_cpy->g.rb = (*user)->g.rb? pcc_rescale((*raw)->r.r, (*user)->g.rb)*3/4: 0;
++		real_cpy->g.rgb = (*user)->g.rgb? pcc_rescale((*raw)->r.r, (*user)->g.rgb)*3/4: 0;
++		real_cpy->b.c = (*user)->b.c? pcc_rescale((*raw)->r.r, (*user)->b.c)*3/4: 0;
++		real_cpy->b.b = (*user)->b.r? pcc_rescale((*raw)->r.r, (*user)->b.b)*3/4: pcc_rescale((*raw)->r.r, (*user)->b.b);
++		real_cpy->b.r = (*user)->b.r? pcc_rescale((*raw)->r.r, (*user)->b.r)*3/4: 0;
++		real_cpy->b.g = (*user)->b.g? pcc_rescale((*raw)->r.r, (*user)->b.g)*3/4: 0;
++		real_cpy->b.rg = (*user)->b.rg? pcc_rescale((*raw)->r.r, (*user)->b.rg)*3/4: 0;
++		real_cpy->b.gb = (*user)->b.gb? pcc_rescale((*raw)->r.r, (*user)->b.gb)*3/4: 0;
++		real_cpy->b.rb = (*user)->b.rb? pcc_rescale((*raw)->r.r, (*user)->b.rb)*3/4: 0;
++		real_cpy->b.rgb = (*user)->b.rgb? pcc_rescale((*raw)->r.r, (*user)->b.rgb)*3/4: 0;
++	}else{
++		if((*user)){
++			memcpy(real_cpy, (*user), sizeof(struct mdp_pcc_data_v1_7));
++		}else{
++			if((*raw)){
++				real_cpy->r.r = (*raw)->r.r;
++				real_cpy->g.g = (*raw)->g.g;
++				real_cpy->b.b = (*raw)->b.b;
++			}else{
++				real_cpy->r.r = 32768;
++				real_cpy->g.g = 32768;
++				real_cpy->b.b = 32768;
++			}
++		}
++	}
++	memcpy(*real, real_cpy, sizeof(struct mdp_pcc_data_v1_7));
++	kfree(real_cpy);
++}
++
++void pcc_combine(struct mdp_pcc_cfg_data *raw,
++		struct mdp_pcc_cfg_data *user,
++		struct mdp_pcc_cfg_data *real)
++{
++	uint32_t r_ops, u_ops, r_en, u_en;
++	struct mdp_pcc_data_v1_7 *v17_ff_data, *v17_user_data,
++				*v17_real_data,*payload;
++
++	if (!real) {
++		real = kzalloc(sizeof(struct mdp_pcc_cfg_data), GFP_KERNEL);
++		payload = kzalloc(sizeof(struct mdp_pcc_data_v1_7), GFP_USER);
++		payload->r.r = payload->g.g = payload->b.b = 32768;
++		real->cfg_payload = payload;
++		if (!real) {
++			pr_err("%s: alloc failed!", __func__);
++			return;
++		}
++	}
++
++	real->version = mdp_pcc_v1_7;
++	real->block = MDP_LOGICAL_BLOCK_DISP_0;
++
++	r_ops = raw->cfg_payload ? raw->ops : MDP_PP_OPS_DISABLE;
++	u_ops = user->cfg_payload ? user->ops : MDP_PP_OPS_DISABLE;
++	r_en = raw && !(raw->ops & MDP_PP_OPS_DISABLE);
++	u_en = user && !(user->ops & MDP_PP_OPS_DISABLE);
++
++	// user configuration may change often, but the raw configuration
++	// will correspond to calibration data which should only change if
++	// there is a mode switch. we only care about the base
++	// coefficients from the user config.
++
++	if (!r_en || (raw->r.r == 0 && raw->g.g == 0 && raw->b.b == 0)){
++		raw->r.r = raw->g.g = raw->b.b = 32768;
++	}
++	if (!u_en || (user->r.r == 0 && user->g.g == 0 && user->b.b ==0)){
++		user->r.r = user->g.g = user->b.b = 32768;
++	}
++
++	
++	real->r.r = pcc_rescale(raw->r.r, user->r.r);
++	real->g.g = pcc_rescale(raw->g.g, user->g.g);
++	real->b.b = pcc_rescale(raw->b.b, user->b.b);
++	v17_ff_data = raw->cfg_payload;
++	v17_user_data = user->cfg_payload;
++	v17_real_data = real->cfg_payload;
++	pcc_v1_7_combine(&v17_ff_data, &v17_user_data, &v17_real_data);
++	if (r_en && u_en)
++		real->ops = r_ops | u_ops;
++	else if (r_en)
++		real->ops = r_ops;
++	else if (u_en)
++		real->ops = u_ops;
++	else
++		real->ops = MDP_PP_OPS_DISABLE;
++}
++
++static int __init flicker_free_init(void)
++{
++	memset(&pcc_config, 0, sizeof(struct mdp_pcc_cfg_data));
++	pcc_config.version = mdp_pcc_v1_7;
++	pcc_config.block = MDP_LOGICAL_BLOCK_DISP_0;
++	payload = kzalloc(sizeof(struct mdp_pcc_data_v1_7),GFP_USER);
++	memset(&dither_config, 0, sizeof(struct mdp_dither_cfg_data));
++	dither_config.version = mdp_dither_v1_7;
++	dither_config.block = MDP_LOGICAL_BLOCK_DISP_0;
++	dither_payload = kzalloc(sizeof(struct mdp_dither_data_v1_7),GFP_USER);
++	INIT_DELAYED_WORK(&back_to_backlight_work, back_to_backlight);
++	return 0;
++}
++
++static void __exit flicker_free_exit(void)
++{
++	kfree(payload);
++	kfree(dither_payload);
++}
++
++late_initcall(flicker_free_init);
++module_exit(flicker_free_exit);
+\ No newline at end of file
+diff --git a/drivers/video/fbdev/msm/flicker_free.h b/drivers/video/fbdev/msm/flicker_free.h
+new file mode 100644
+index 0000000..0311f0b
+--- /dev/null
++++ b/drivers/video/fbdev/msm/flicker_free.h
+@@ -0,0 +1,57 @@
++/*
++ * An flicker free driver based on Qcom MDSS for OLED devices
++ *
++ * Copyright (C) 2012-2014, The Linux Foundation. All rights reserved.
++ * Copyright (C) Sony Mobile Communications Inc. All rights reserved.
++ * Copyright (C) 2014-2018, AngeloGioacchino Del Regno <kholk11@gmail.com>
++ * Copyright (C) 2018, Devries <therkduan@gmail.com>
++ * Copyright (C) 2019-2020, Tanish <tanish2k09.dev@gmail.com>
++ * Copyright (C) 2020, shxyke <shxyke@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#ifndef _FLICKER_FREE_H
++#define _FLICKER_FREE_H
++#include <uapi/linux/msm_mdp.h>
++
++#define FF_MAX_SCALE 32768 /* Maximum value of RGB possible */
++
++#define FF_MIN_SCALE 5120 /* Minimum value of RGB recommended */
++
++#define RET_WORKGROUND_DELAY 200
++
++#define BACKLIGHT_INDEX 66
++
++/* with this function you can set the flicker free into enabled or disabled */
++void set_flicker_free(bool enabled);
++
++/* you can use this function to remap the phisical backlight level */
++u32 mdss_panel_calc_backlight(u32 bl_lvl);
++
++/* set the minimum backlight value that does not flicker on your device */
++void set_elvss_off_threshold(int value);
++
++/* get the current elvss value */
++int get_elvss_off_threshold(void);
++
++/* get the current flicker free status (enabled or disabled) */
++bool if_flicker_free_enabled(void);
++
++void pcc_v1_7_combine(struct mdp_pcc_data_v1_7 **raw,
++		struct mdp_pcc_data_v1_7 **user,
++		struct mdp_pcc_data_v1_7 **real);
++
++void pcc_combine(struct mdp_pcc_cfg_data *raw,
++		struct mdp_pcc_cfg_data *user,
++		struct mdp_pcc_cfg_data *real);
++
++#endif  /* _FLICKER_FREE_H */
+diff --git a/drivers/video/fbdev/msm/flicker_free_enabler.c b/drivers/video/fbdev/msm/flicker_free_enabler.c
+new file mode 100644
+index 0000000..6dd6dbb
+--- /dev/null
++++ b/drivers/video/fbdev/msm/flicker_free_enabler.c
+@@ -0,0 +1,121 @@
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/slab.h>
++#include <asm/uaccess.h>
++
++#include "flicker_free.h"
++
++#define PROC_NAME "flicker_free"
++
++#define PROC_DIR_NAME "flicker_free"
++#define MIN_BRIGHTNESS "min_brightness"
++
++struct proc_dir_entry *root_entry;
++
++struct proc_dir_entry *enabled, *minbright;
++
++static int show_ff_enabled( struct seq_file *seq, void *v)
++{
++        seq_printf(seq, "%d\n", (if_flicker_free_enabled()?1:0));
++        return 0;
++}
++
++static int my_open_ff_enabled(struct inode *inode, struct file *file)
++{
++    return single_open(file, show_ff_enabled, NULL);
++}
++
++static ssize_t my_write_procmem( struct file *file, const char __user *buffer,
++                            size_t count, loff_t *pos)
++{
++    int value;
++    value = 0;
++    get_user(value,buffer);
++    switch (value)
++    {
++    case '0':
++        set_flicker_free(false);
++        break;
++    
++    default:
++        set_flicker_free(true);
++        break;
++    }
++    return count;
++}
++
++static ssize_t my_write_procbright( struct file *file, const char __user *buffer,
++                            size_t count, loff_t *pos)
++{
++    int value = 0;
++    char *tmp = kzalloc((count+1), GFP_KERNEL);  
++    if(!tmp)  
++        return -ENOMEM;  
++    if(copy_from_user(tmp, buffer, count))  
++    {  
++        kfree(tmp);  
++        return EFAULT;  
++    }  
++    if(!kstrtoint(tmp,10,&value))
++    {
++        set_elvss_off_threshold(value);
++    }else{
++        kfree(tmp);
++        return EFAULT;
++    }
++    kfree(tmp);
++    return count;
++}
++
++static int show_procbright( struct seq_file *seq, void *v)
++{
++    seq_printf(seq, "%d\n", get_elvss_off_threshold());
++    return 0;
++}
++
++static int my_open_procbright(struct inode *inode, struct file *file)
++{
++    return single_open(file, show_procbright, NULL);
++}
++
++static const struct file_operations proc_file_fops_enable = {
++    .owner = THIS_MODULE,
++    .open = my_open_ff_enabled,
++    .read = seq_read,
++    .write = my_write_procmem,
++    .llseek = seq_lseek,
++    .release = single_release,
++};
++
++static const struct file_operations proc_file_fops_minbright = {
++    .owner = THIS_MODULE,
++    .open = my_open_procbright,
++    .read = seq_read,
++    .write = my_write_procbright,
++    .llseek = seq_lseek,
++    .release = single_release,
++};
++
++static int __init init( void )
++{
++    root_entry = proc_mkdir(PROC_DIR_NAME, NULL);
++    enabled = proc_create(PROC_NAME, 0x0666, root_entry, &proc_file_fops_enable);
++    minbright = proc_create(MIN_BRIGHTNESS, 0x0666, root_entry, &proc_file_fops_minbright);
++    if (!enabled && !minbright) {
++        return ( -EINVAL );
++    }
++
++    return 0;
++}
++
++static void __exit cleanup( void )
++{
++        remove_proc_entry(PROC_NAME, root_entry);
++        remove_proc_entry(MIN_BRIGHTNESS, root_entry);
++}
++
++module_init( init );
++module_exit( cleanup );
++
+diff --git a/drivers/video/fbdev/msm/mdss_dsi.c b/drivers/video/fbdev/msm/mdss_dsi.c
+index a8429c7..67e1ced 100644
+--- a/drivers/video/fbdev/msm/mdss_dsi.c
++++ b/drivers/video/fbdev/msm/mdss_dsi.c
+@@ -3117,6 +3117,14 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
+ 					&ctrl_pdata->dba_work, HZ);
+ 		}
+ 		break;
++	case MDSS_EVENT_PANEL_SET_HBM_MODE:
++		ctrl_pdata->hbm_mode = (int)(unsigned long) arg;
++		mdss_dsi_panel_set_hbm_mode(ctrl_pdata,
++		    (int)(unsigned long) ctrl_pdata->hbm_mode);
++		break;
++	case MDSS_EVENT_PANEL_GET_HBM_MODE:
++		rc = mdss_dsi_panel_get_hbm_mode(ctrl_pdata);
++		break;
+ 	case MDSS_EVENT_PANEL_SET_SRGB_MODE:
+ 		ctrl_pdata->SRGB_mode = (int)(unsigned long) arg;
+ 		if (ctrl_pdata->SRGB_mode == 1)
+diff --git a/drivers/video/fbdev/msm/mdss_dsi.h b/drivers/video/fbdev/msm/mdss_dsi.h
+index 838c4d0..c478752 100644
+--- a/drivers/video/fbdev/msm/mdss_dsi.h
++++ b/drivers/video/fbdev/msm/mdss_dsi.h
+@@ -586,6 +586,9 @@ struct mdss_dsi_ctrl_pdata {
+ 	int disp_vci_en_gpio;
+ 	int disp_poc_en_gpio;
+ 
++	struct dsi_panel_cmds hbm_on_cmds;
++	struct dsi_panel_cmds hbm_off_cmds;
++	int hbm_mode;
+ 
+ 	bool is_panel_on;
+ 	bool setting_mode_loaded;
+@@ -650,6 +653,8 @@ struct dsi_status_data {
+ int mdss_dsi_panel_set_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level);
+ int mdss_dsi_panel_get_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl);
+ 
++int mdss_dsi_panel_set_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level);
++int mdss_dsi_panel_get_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl);
+ 
+ int mdss_dsi_panel_set_adobe_rgb_mode
+ 	(struct mdss_dsi_ctrl_pdata *ctrl, int level);
+diff --git a/drivers/video/fbdev/msm/mdss_dsi_panel.c b/drivers/video/fbdev/msm/mdss_dsi_panel.c
+index 4e6c91a..e7c51b6 100644
+--- a/drivers/video/fbdev/msm/mdss_dsi_panel.c
++++ b/drivers/video/fbdev/msm/mdss_dsi_panel.c
+@@ -1117,6 +1117,41 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
+ 	}
+ }
+ 
++int mdss_dsi_panel_set_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level)
++{
++	struct dsi_panel_cmds *hbm_on_cmds,*hbm_off_cmds;
++
++	mutex_lock(&ctrl->panel_mode_lock);
++    if (!ctrl->is_panel_on){
++        mutex_unlock(&ctrl->panel_mode_lock);
++        return 0;
++    }
++	hbm_on_cmds = &ctrl->hbm_on_cmds;
++	hbm_off_cmds = &ctrl->hbm_off_cmds;
++    if (level){
++        if (hbm_on_cmds->cmd_cnt){
++            mdss_dsi_panel_cmds_send(ctrl, hbm_on_cmds, CMD_REQ_COMMIT);
++            pr_err("HBM Mode On.\n");
++        } else{
++            pr_err("This Panel not support HBM Mode On.");
++        }
++    } else{
++        if (hbm_off_cmds->cmd_cnt){
++            mdss_dsi_panel_cmds_send(ctrl, hbm_off_cmds, CMD_REQ_COMMIT);
++            pr_err("HBM Mode Off.\n");
++        } else{
++            pr_err("This Panel not support HBM Mode Off.");
++        }
++    }
++    mutex_unlock(&ctrl->panel_mode_lock);
++	return 0;
++}
++
++int mdss_dsi_panel_get_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl)
++{
++    return ctrl->hbm_mode;
++}
++
+ int mdss_dsi_panel_set_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level)
+ {
+ 	struct dsi_panel_cmds *srgb_on_cmds;
+@@ -1438,6 +1473,11 @@ end:
+ 		mdss_dsi_panel_set_adaption_mode(ctrl,
+ 		   mdss_dsi_panel_get_adaption_mode(ctrl));
+ 	}
++
++	if (mdss_dsi_panel_get_hbm_mode(ctrl)) {
++		mdss_dsi_panel_set_hbm_mode(ctrl,
++		   mdss_dsi_panel_get_hbm_mode(ctrl));
++	}
+ 	 return ret;
+ }
+ 
+@@ -3481,7 +3521,12 @@ static int mdss_panel_parse_dt(struct device_node *np,
+ 	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->dci_p3_off_cmds,
+ 		"qcom,mdss-dsi-panel-dci-p3-off-command",
+ 		"qcom,mdss-dsi-dci-p3-command-state");
+-
++	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_on_cmds,
++		"qcom,mdss-dsi-panel-hbm-on-command",
++		"qcom,mdss-dsi-hbm-command-state");
++	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_off_cmds,
++		"qcom,mdss-dsi-panel-hbm-off-command",
++		"qcom,mdss-dsi-hbm-command-state");
+ 
+ 	ctrl_pdata->high_brightness_panel= of_property_read_bool(np,
+ 					"qcom,mdss-dsi-high-brightness-panel");
+diff --git a/drivers/video/fbdev/msm/mdss_fb.c b/drivers/video/fbdev/msm/mdss_fb.c
+index ac9dd65..274a37b 100644
+--- a/drivers/video/fbdev/msm/mdss_fb.c
++++ b/drivers/video/fbdev/msm/mdss_fb.c
+@@ -76,6 +76,11 @@
+ #define BLANK_FLAG_ULP	FB_BLANK_NORMAL
+ #endif
+ 
++#ifdef CONFIG_FLICKER_FREE
++struct msm_fb_data_type *ff_mfd_copy;
++u32 ff_bkl_lvl_cpy;
++#endif
++
+ /*
+  * Time period for fps calulation in micro seconds.
+  * Default value is set to 1 sec.
+@@ -911,6 +916,44 @@ end:
+ 	return len;
+ }
+ 
++static ssize_t mdss_fb_get_hbm_mode(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct fb_info *fbi = dev_get_drvdata(dev);
++	struct msm_fb_data_type *mfd = fbi->par;
++	int ret = 0;
++	int level = 0;
++
++	level = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_GET_HBM_MODE,
++			NULL);
++	ret = scnprintf(buf, PAGE_SIZE, "%d\n", level);
++	return ret;
++}
++
++static ssize_t mdss_fb_set_hbm_mode(struct device *dev,
++	struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct fb_info *fbi = dev_get_drvdata(dev);
++	struct msm_fb_data_type *mfd = fbi->par;
++	int rc = 0;
++	int level = 0;
++
++	rc = kstrtoint(buf, 10, &level);
++	if (rc) {
++		pr_err("kstrtoint failed. rc=%d\n", rc);
++		return rc;
++	}
++    rc = mdss_fb_send_panel_event(mfd, MDSS_EVENT_PANEL_SET_HBM_MODE,
++	    (void *)(unsigned long)level);
++	if (rc)
++		pr_err("Fail to set HBM Mode = %d \n", level);
++
++	return count;
++}
++
++static DEVICE_ATTR(hbm, S_IRUGO | S_IWUSR,
++mdss_fb_get_hbm_mode, mdss_fb_set_hbm_mode);
++
+ static ssize_t mdss_fb_get_srgb_mode(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -949,6 +992,9 @@ static ssize_t mdss_fb_set_srgb_mode(struct device *dev,
+ 	return count;
+ }
+ 
++static DEVICE_ATTR(SRGB, S_IRUGO | S_IWUSR,
++	mdss_fb_get_srgb_mode, mdss_fb_set_srgb_mode);
++
+ static DEVICE_ATTR(srgb, S_IRUGO | S_IWUSR,
+ 	mdss_fb_get_srgb_mode, mdss_fb_set_srgb_mode);
+ 
+@@ -991,6 +1037,9 @@ static ssize_t mdss_fb_set_adobe_rgb_mode(struct device *dev,
+ 	return count;
+ }
+ 
++static DEVICE_ATTR(Adobe_RGB, S_IRUGO | S_IWUSR,
++	mdss_fb_get_adobe_rgb_mode, mdss_fb_set_adobe_rgb_mode);
++
+ static DEVICE_ATTR(adobe_rgb, S_IRUGO | S_IWUSR,
+ 	mdss_fb_get_adobe_rgb_mode, mdss_fb_set_adobe_rgb_mode);
+ 
+@@ -1032,6 +1081,9 @@ static ssize_t mdss_fb_set_dci_p3_mode(struct device *dev,
+ 	return count;
+ }
+ 
++static DEVICE_ATTR(DCI_P3, S_IRUGO | S_IWUSR,
++	mdss_fb_get_dci_p3_mode, mdss_fb_set_dci_p3_mode);
++
+ static DEVICE_ATTR(dci_p3, S_IRUGO | S_IWUSR,
+ 	mdss_fb_get_dci_p3_mode, mdss_fb_set_dci_p3_mode);
+ 
+@@ -1221,6 +1273,10 @@ static struct attribute *mdss_fb_attrs[] = {
+ 	&dev_attr_msm_fb_panel_status.attr,
+ 	&dev_attr_msm_fb_dfps_mode.attr,
+ 	&dev_attr_measured_fps.attr,
++	&dev_attr_SRGB.attr,
++	&dev_attr_hbm.attr,
++	&dev_attr_Adobe_RGB.attr,
++	&dev_attr_DCI_P3.attr,
+ 	&dev_attr_srgb.attr,
+ 	&dev_attr_adobe_rgb.attr,
+ 	&dev_attr_dci_p3.attr,
+@@ -1629,6 +1685,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
+ 
+ 	/* android supports only one lcd-backlight/lcd for now */
+ 	if (!lcd_backlight_registered) {
++		backlight_led.brightness = mfd->panel_info->brightness_max;
++		backlight_led.max_brightness = mfd->panel_info->brightness_max;
+ 		if (led_classdev_register(&pdev->dev, &backlight_led))
+ 			pr_err("led_classdev_register failed\n");
+ 		else
+@@ -2031,8 +2089,15 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+ 		} else {
+ 			if (mfd->bl_level != bkl_lvl)
+ 				bl_notify_needed = true;
++		#ifdef CONFIG_FLICKER_FREE
++			ff_mfd_copy = mfd;
++			ff_bkl_lvl_cpy = temp;
++			pr_debug("backlight sent to panel :%d\n", mdss_panel_calc_backlight(temp));
++			pdata->set_backlight(pdata, mdss_panel_calc_backlight(temp));
++		#else
+ 			pr_debug("backlight sent to panel :%d\n", temp);
+ 			pdata->set_backlight(pdata, temp);
++		#endif
+ 			mfd->bl_level = bkl_lvl;
+ 			mfd->bl_level_scaled = temp;
+ 		}
+@@ -2045,6 +2110,17 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+ 	}
+ }
+ 
++#ifdef CONFIG_FLICKER_FREE
++struct msm_fb_data_type *get_mfd_copy(void)
++{
++	return ff_mfd_copy;
++}
++
++u32 get_bkl_lvl(void){
++	return ff_bkl_lvl_cpy;
++}
++#endif
++
+ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
+ {
+ 	struct mdss_panel_data *pdata;
+@@ -2066,7 +2142,13 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
+ 				mdss_fb_bl_update_notify(mfd,
+ 					NOTIFY_TYPE_BL_AD_ATTEN_UPDATE);
+ 			mdss_fb_bl_update_notify(mfd, NOTIFY_TYPE_BL_UPDATE);
++		#ifdef CONFIG_FLICKER_FREE
++			ff_mfd_copy = mfd;
++			ff_bkl_lvl_cpy = temp;
++			pdata->set_backlight(pdata, mdss_panel_calc_backlight(temp));
++		#else
+ 			pdata->set_backlight(pdata, temp);
++		#endif
+ 			mfd->bl_level_scaled = mfd->unset_bl_level;
+ 			mfd->allow_bl_update = true;
+ 		}
+@@ -3426,6 +3508,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
+ 		}
+ 		if (ret == -ETIME)
+ 			ret = NOTIFY_BAD;
++		mfd->idle_state = MDSS_FB_IDLE_TIMER_RUNNING;
+ 		break;
+ 	case MDP_NOTIFY_FRAME_FLUSHED:
+ 		pr_debug("%s: frame flushed\n", sync_pt_data->fence_name);
+diff --git a/drivers/video/fbdev/msm/mdss_fb.h b/drivers/video/fbdev/msm/mdss_fb.h
+index 4d28882..1566c09 100644
+--- a/drivers/video/fbdev/msm/mdss_fb.h
++++ b/drivers/video/fbdev/msm/mdss_fb.h
+@@ -24,6 +24,12 @@
+ #include "mdss_panel.h"
+ #include "mdss_mdp_splash_logo.h"
+ 
++#ifdef CONFIG_FLICKER_FREE
++#include "flicker_free.h"
++struct msm_fb_data_type *get_mfd_copy(void);
++u32 get_bkl_lvl(void);
++#endif
++
+ #define MDSS_LPAE_CHECK(phys)	\
+ 	((sizeof(phys) > sizeof(unsigned long)) ? ((phys >> 32) & 0xFF) : (0))
+ 
+diff --git a/drivers/video/fbdev/msm/mdss_mdp.h b/drivers/video/fbdev/msm/mdss_mdp.h
+index 9c93c50..176e22c 100644
+--- a/drivers/video/fbdev/msm/mdss_mdp.h
++++ b/drivers/video/fbdev/msm/mdss_mdp.h
+@@ -1853,6 +1853,8 @@ int mdss_mdp_pa_config(struct msm_fb_data_type *mfd,
+ 			struct mdp_pa_cfg_data *config, u32 *copyback);
+ int mdss_mdp_pa_v2_config(struct msm_fb_data_type *mfd,
+ 			struct mdp_pa_v2_cfg_data *config, u32 *copyback);
++int mdss_mdp_kernel_pcc_config(struct msm_fb_data_type *mfd,
++			struct mdp_pcc_cfg_data *cfg_ptr, u32 *copyback);
+ int mdss_mdp_pcc_config(struct msm_fb_data_type *mfd,
+ 			struct mdp_pcc_cfg_data *cfg_ptr, u32 *copyback);
+ int mdss_mdp_igc_lut_config(struct msm_fb_data_type *mfd,
+diff --git a/drivers/video/fbdev/msm/mdss_mdp_pp.c b/drivers/video/fbdev/msm/mdss_mdp_pp.c
+index f2afd04..0577553 100644
+--- a/drivers/video/fbdev/msm/mdss_mdp_pp.c
++++ b/drivers/video/fbdev/msm/mdss_mdp_pp.c
+@@ -3880,6 +3880,63 @@ static void pp_update_pcc_regs(char __iomem *addr,
+ 	writel_relaxed(cfg_ptr->b.rgb_1, addr + 8);
+ }
+ 
++int mdss_mdp_kernel_pcc_config(struct msm_fb_data_type *mfd,
++				struct mdp_pcc_cfg_data *config,
++				u32 *copyback)
++{
++	int ret = 0;
++	u32 disp_num;
++	struct mdss_pp_res_type_v1_7 *res_cache;
++	struct mdp_pcc_data_v1_7 *v17_kernel_data, v17_usr_config, 
++			*v17_user_data, *v17_real_data;
++
++	ret = pp_validate_dspp_mfd_block(mfd, config->block);
++	if (ret) {
++		pr_err("Invalid block %d mfd index %d, ret %d\n",
++				config->block,
++				(mfd ? mfd->index : -1), ret);
++		return ret;
++	}
++	mutex_lock(&mdss_pp_mutex);
++	disp_num = config->block - MDP_LOGICAL_BLOCK_DISP_0;
++
++	if (!config || !mdss_pp_res) {
++		pr_err("invalid param config %pK pp_res %pK\n",
++			config, mdss_pp_res);
++		return -EINVAL;
++	}
++
++	res_cache = mdss_pp_res->pp_data_v1_7;
++	mdss_pp_res->kernel_pcc_disp_cfg[disp_num] = *config;
++	v17_kernel_data = &res_cache->kernel_pcc_v17_data[disp_num];
++	v17_user_data = &res_cache->user_pcc_v17_data[disp_num];
++	v17_real_data = &res_cache->pcc_v17_data[disp_num];
++	mdss_pp_res->kernel_pcc_disp_cfg[disp_num].cfg_payload =
++		(void *) v17_kernel_data;
++	mdss_pp_res->user_pcc_disp_cfg[disp_num].cfg_payload =
++		(void *) v17_user_data;
++	mdss_pp_res->pcc_disp_cfg[disp_num].cfg_payload =
++		(void *) v17_real_data;
++	memcpy(&v17_usr_config, config->cfg_payload, sizeof(v17_usr_config));
++	ret = 0;
++	if ((config->ops & MDP_PP_OPS_DISABLE)&&
++			!(config->ops & MDP_PP_OPS_WRITE)) {
++		pr_debug("disable pcc\n");
++		pr_debug("op for pcc %d\n", config->ops);
++		ret = 0;
++		goto kernel_pcc_config_exit;
++	}
++	memcpy(v17_kernel_data, &v17_usr_config, sizeof(v17_usr_config));
++	pcc_combine(&mdss_pp_res->kernel_pcc_disp_cfg[disp_num],
++			&mdss_pp_res->user_pcc_disp_cfg[disp_num],
++			&mdss_pp_res->pcc_disp_cfg[disp_num]);
++	pcc_v1_7_combine(&v17_kernel_data, &v17_user_data, &v17_real_data);
++	mdss_pp_res->pp_disp_flags[disp_num] |= PP_FLAGS_DIRTY_PCC;
++kernel_pcc_config_exit:
++	mutex_unlock(&mdss_pp_mutex);
++	return ret;
++}
++
+ int mdss_mdp_pcc_config(struct msm_fb_data_type *mfd,
+ 				struct mdp_pcc_cfg_data *config,
+ 				u32 *copyback)
+diff --git a/drivers/video/fbdev/msm/mdss_mdp_pp.h b/drivers/video/fbdev/msm/mdss_mdp_pp.h
+index 136e2d7..7ce5cd8 100644
+--- a/drivers/video/fbdev/msm/mdss_mdp_pp.h
++++ b/drivers/video/fbdev/msm/mdss_mdp_pp.h
+@@ -136,6 +136,8 @@ struct mdss_pp_res_type_v1_7 {
+ 	struct mdp_hist_lut_data_v1_7 hist_lut_v17_data[MDSS_BLOCK_DISP_NUM];
+ 	struct mdp_dither_data_v1_7 dither_v17_data[MDSS_BLOCK_DISP_NUM];
+ 	struct mdp_gamut_data_v1_7 gamut_v17_data[MDSS_BLOCK_DISP_NUM];
++	struct mdp_pcc_data_v1_7 kernel_pcc_v17_data[MDSS_BLOCK_DISP_NUM];
++	struct mdp_pcc_data_v1_7 user_pcc_v17_data[MDSS_BLOCK_DISP_NUM];
+ 	struct mdp_pcc_data_v1_7 pcc_v17_data[MDSS_BLOCK_DISP_NUM];
+ 	struct mdp_pa_data_v1_7 pa_v17_data[MDSS_BLOCK_DISP_NUM];
+ 	struct mdp_pa_dither_res_data_v1_7 pa_dither_data[MDSS_BLOCK_DISP_NUM];
+@@ -187,6 +189,8 @@ struct mdss_pp_res_type {
+ 	struct mdp_dither_cfg_data pa_dither_cfg[MDSS_BLOCK_DISP_NUM];
+ 	/* physical info */
+ 	struct pp_hist_col_info *dspp_hist;
++	struct mdp_pcc_cfg_data kernel_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
++	struct mdp_pcc_cfg_data user_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
+ 	/*
+ 	 * The pp_data_v1_7 will be a pointer to newer MDP revisions of the
+ 	 * pp_res, which will hold the cfg_payloads of each feature in a single
+diff --git a/drivers/video/fbdev/msm/mdss_mdp_pp_cache_config.c b/drivers/video/fbdev/msm/mdss_mdp_pp_cache_config.c
+index a5ec709..12f6607 100644
+--- a/drivers/video/fbdev/msm/mdss_mdp_pp_cache_config.c
++++ b/drivers/video/fbdev/msm/mdss_mdp_pp_cache_config.c
+@@ -650,7 +650,8 @@ static int pp_pcc_cache_params_v1_7(struct mdp_pcc_cfg_data *config,
+ 	u32 disp_num;
+ 	int ret = 0;
+ 	struct mdss_pp_res_type_v1_7 *res_cache;
+-	struct mdp_pcc_data_v1_7 *v17_cache_data, v17_usr_config;
++	struct mdp_pcc_data_v1_7 *v17_kernel_data, v17_usr_config, 
++			*v17_user_data, *v17_real_data;
+ 
+ 	if (!config || !mdss_pp_res) {
+ 		pr_err("invalid param config %pK pp_res %pK\n",
+@@ -674,15 +675,26 @@ static int pp_pcc_cache_params_v1_7(struct mdp_pcc_cfg_data *config,
+ 		return -EINVAL;
+ 	} else {
+ 		disp_num = config->block - MDP_LOGICAL_BLOCK_DISP_0;
+-		mdss_pp_res->pcc_disp_cfg[disp_num] = *config;
+-		v17_cache_data = &res_cache->pcc_v17_data[disp_num];
++		mdss_pp_res->user_pcc_disp_cfg[disp_num] = *config;
++		v17_kernel_data = &res_cache->kernel_pcc_v17_data[disp_num];
++		v17_user_data = &res_cache->user_pcc_v17_data[disp_num];
++		v17_real_data = &res_cache->pcc_v17_data[disp_num];
++		mdss_pp_res->kernel_pcc_disp_cfg[disp_num].cfg_payload =
++			(void *) v17_kernel_data;
++		mdss_pp_res->user_pcc_disp_cfg[disp_num].cfg_payload =
++			(void *) v17_user_data;
+ 		mdss_pp_res->pcc_disp_cfg[disp_num].cfg_payload =
+-			(void *) v17_cache_data;
++			(void *) v17_real_data;
+ 		if (copy_from_user(&v17_usr_config, config->cfg_payload,
+ 				   sizeof(v17_usr_config))) {
++#if defined(CONFIG_FB_MSM_MDSS_KCAL_CTRL) || defined(CONFIG_FLICKER_FREE)
++			memcpy(&v17_usr_config, config->cfg_payload, sizeof(v17_usr_config));
++			ret = 0;
++#else
+ 			pr_err("failed to copy v17 pcc\n");
+ 			ret = -EFAULT;
+ 			goto pcc_config_exit;
++#endif
+ 		}
+ 		if ((config->ops & MDP_PP_OPS_DISABLE)) {
+ 			pr_debug("disable pcc\n");
+@@ -691,9 +703,13 @@ static int pp_pcc_cache_params_v1_7(struct mdp_pcc_cfg_data *config,
+ 		}
+ 		if (!(config->ops & MDP_PP_OPS_WRITE)) {
+ 			pr_debug("op for pcc %d\n", config->ops);
+-			goto pcc_config_exit;
++			goto pcc_config_exit; 
+ 		}
+-		memcpy(v17_cache_data, &v17_usr_config, sizeof(v17_usr_config));
++		memcpy(v17_user_data, &v17_usr_config, sizeof(v17_usr_config));
++		pcc_combine(&mdss_pp_res->kernel_pcc_disp_cfg[disp_num],
++				&mdss_pp_res->user_pcc_disp_cfg[disp_num],
++				&mdss_pp_res->pcc_disp_cfg[disp_num]);
++		pcc_v1_7_combine(&v17_kernel_data, &v17_user_data, &v17_real_data);
+ 	}
+ pcc_config_exit:
+ 	return ret;
+@@ -1194,9 +1210,15 @@ static int pp_pa_cache_params_v1_7(struct mdp_pa_v2_cfg_data *config,
+ 
+ 	if (copy_from_user(&pa_usr_config, config->cfg_payload,
+ 			   sizeof(pa_usr_config))) {
++#ifdef CONFIG_FB_MSM_MDSS_KCAL_CTRL
++		pr_err("%s Failed to copy v1_7 PA - copying in kernel \n",__func__);
++		memcpy(&pa_usr_config, config->cfg_payload, sizeof(pa_usr_config));
++		ret = 0;
++#else
+ 		pr_err("Failed to copy v1_7 PA\n");
+ 		ret = -EFAULT;
+ 		goto pa_config_exit;
++#endif
+ 	}
+ 
+ 	if ((config->flags & MDP_PP_OPS_DISABLE)) {
+diff --git a/drivers/video/fbdev/msm/mdss_panel.h b/drivers/video/fbdev/msm/mdss_panel.h
+index cd1f2a3..203d536 100644
+--- a/drivers/video/fbdev/msm/mdss_panel.h
++++ b/drivers/video/fbdev/msm/mdss_panel.h
+@@ -308,7 +308,8 @@ enum mdss_intf_events {
+ 	MDSS_EVENT_DEEP_COLOR,
+ 	MDSS_EVENT_DISABLE_PANEL,
+ 	MDSS_EVENT_UPDATE_PANEL_PPM,
+-
++	MDSS_EVENT_PANEL_SET_HBM_MODE,
++	MDSS_EVENT_PANEL_GET_HBM_MODE,
+ 	MDSS_EVENT_PANEL_SET_SRGB_MODE,
+ 	MDSS_EVENT_PANEL_GET_SRGB_MODE,
+ 	MDSS_EVENT_PANEL_SET_ADOBE_RGB_MODE,
+-- 
+2.32.0.windows.2
+

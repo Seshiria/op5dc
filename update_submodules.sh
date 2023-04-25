@@ -10,6 +10,12 @@ get_hash() {
     branch=$2
     wget -O - -q https://api.github.com/repos/"$repo"/commits/"$branch" | grep -m 1 sha |  awk '{print $2}' | tr -d '",'
 }
+get_release_hash() {
+    repo=$1
+    branch=$2
+    tag=$(wget -O - -q https://api.github.com/repos/"$repo"/releases/latest | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+    wget -O - -q https://api.github.com/repos/"$repo"/git/refs/tags/"$tag"| grep -m 1 sha |  awk '{print $2}' | tr -d '",'
+}
 #hash比较
 compare_hash() {
     _name=$1
@@ -43,6 +49,9 @@ PREBUILTS_URL=https://github.com/LineageOS/android_prebuilts_build-tools/archive
 #Anykernel
 ANYKERNEL_HASH=$ANYKERNEL_HASH
 ANYKERNEL_URL=https://github.com/osm0sis/AnyKernel3/archive/"\${ANYKERNEL_HASH}".zip
+#kernelsu
+KERNELSU_HASH=$KERNELSU_HASH
+KERNELSU_URL=https://github.com/tiann/KernelSU/archive/"\${KERNELSU_HASH}".zip
 #lineageos kernel
 KERNEL_HASH=$KERNEL_HASH
 KERNEL_URL=https://github.com/LineageOS/android_kernel_oneplus_msm8998/archive/"\${KERNEL_HASH}".zip
@@ -59,7 +68,8 @@ up_hash=$(get_hash "LineageOS/android_prebuilts_build-tools" "${lineage_branch}.
 compare_hash "PREBUILTS_HASH" "$up_hash"
 up_hash=$(get_hash "LineageOS/android_kernel_oneplus_msm8998" "${lineage_branch}")
 compare_hash "KERNEL_HASH" "$up_hash"
-
+up_hash=$(get_release_hash "tiann/KernelSU" "main")
+compare_hash "KERNELSU_HASH" "$up_hash"
 up_hash=$(get_hash "osm0sis/AnyKernel3" "master")
 compare_hash "ANYKERNEL_HASH" "$up_hash"
 
