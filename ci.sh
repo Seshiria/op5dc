@@ -82,14 +82,13 @@ test -d releases || mkdir releases
 ls -lh
 cd ./android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/
 
+##dc patch
+Patch_dc
 #Write flag
 test -f localversion || touch localversion
 cat >localversion <<EOF
 ~DCdimming-for-Seshiria
 EOF
-
-##dc patch
-Patch_dc
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
@@ -105,9 +104,12 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     LLVM=1 &&
     Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
 
-
 ##kernelsu
 Patch_ksu
+test -f localversion || touch localversion
+cat >localversion <<EOF
+~DCdimming&ksu-for-Seshiria
+EOF
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
     SUBARCH=arm64 \
