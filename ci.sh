@@ -1,7 +1,7 @@
 #!/bin/bash
 #for github actions
 set -eu
-if command -v sudo ;then
+if command -v sudo; then
     sudo apt update
 else
     apt update
@@ -30,7 +30,7 @@ Initsystem() {
 
 Patch_dc() {
     #cp -R ../drivers/* ./drivers/
-    patch -p1 < ../dc_patch/dc_patch.diff
+    patch -p1 <../dc_patch/dc_patch.diff
     grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Patch_ksu() {
@@ -41,22 +41,21 @@ Patch_ksu() {
     DRIVER_DIR="$GKI_ROOT/drivers"
     test -e "$DRIVER_DIR/kernelsu" || ln -sf "$GKI_ROOT/KernelSU/kernel" "$DRIVER_DIR/kernelsu"
     DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-    grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >> "$DRIVER_MAKEFILE"
+    grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >>"$DRIVER_MAKEFILE"
     #额外的修补
-    grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
+    grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig ||
         echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
-    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH"| \
-                    sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
-    echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>  KernelSU/kernel/Makefile
-    echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >> KernelSU/kernel/Makefile
+    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" |
+        sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
+    echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>KernelSU/kernel/Makefile
+    echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >>KernelSU/kernel/Makefile
     #KernelSU/kernel/ksu.h :10
-    KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200 ) #major * 10000 + git version + 200 
+    KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200) #major * 10000 + git version + 200
     #拷贝修补后的文件
     #cp -R ../ksu_patch/* ./
-    patch -p1 < ../ksu_patch/ksu_patch.diff
-
+    patch -p1 <../ksu_patch/ksu_patch.diff
 }
 Releases() {
     #path to ./kernel/
@@ -68,7 +67,7 @@ Releases() {
     kernelversion=$(head -n 3 "${GITHUB_WORKSPACE}"/android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/Makefile | awk '{print $3}' | tr -d '\n')
     buildtime=$(date +%Y%m%d-%H%M%S)
     touch "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/buildinfo
-    cat > "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/buildinfo <<EOF
+    cat >"${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/buildinfo <<EOF
     buildtime ${buildtime}
     Image.gz-dtb hash ${md5}
 EOF
@@ -121,5 +120,5 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    LLVM=1 && 
+    LLVM=1 &&
     Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
