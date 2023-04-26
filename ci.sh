@@ -107,7 +107,7 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
 Patch_ksu
 test -f localversion || touch localversion
 cat >localversion <<EOF
-~DCdimming&ksu-for-Seshiria
+~DCdimming-ksu-for-Seshiria
 EOF
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
