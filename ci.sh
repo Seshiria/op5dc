@@ -39,7 +39,13 @@ Patch_ksu() {
     #source  https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh
     GKI_ROOT=$(pwd)
     DRIVER_DIR="$GKI_ROOT/drivers"
-    test -e "$DRIVER_DIR/kernelsu" || ln -sf "$GKI_ROOT/KernelSU/kernel" "$DRIVER_DIR/kernelsu"
+    cd "$DRIVER_DIR"
+    if test -d "$GKI_ROOT/common/drivers"; then
+        ln -sf "../../KernelSU/kernel" "kernelsu"
+    elif test -d "$GKI_ROOT/drivers"; then
+        ln -sf "../KernelSU/kernel" "kernelsu"
+    fi
+    cd "$GKI_ROOT"
     DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
     grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >>"$DRIVER_MAKEFILE"
     #额外的修补
