@@ -49,8 +49,10 @@ Patch_ksu() {
     DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
     grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-y += kernelsu/\n" >>"$DRIVER_MAKEFILE"
     #额外的修补
-    grep -q CONFIG_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
-        echo "CONFIG_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    grep -q CONFIG_KSU arch/arm64/configs/lineage_oneplus5_defconfig || \
+        echo "CONFIG_KSU=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    grpe -q CONFIG_OVERLAY_FS arch/arm64/configs/lineage_oneplus5_defconfig || \
+        echo "CONFIG_OVERLAY_FS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" |
