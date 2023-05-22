@@ -53,6 +53,8 @@ Patch_ksu() {
         echo "CONFIG_KSU=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     grpe -q CONFIG_OVERLAY_FS arch/arm64/configs/lineage_oneplus5_defconfig || \
         echo "CONFIG_OVERLAY_FS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
+    greo -q CONFIG_KSU_NO_KPROBES arch/arm64/configs/lineage_oneplus5_defconfig || \
+        echo "CONFIG_KSU_NO_KPROBES=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
