@@ -7,12 +7,12 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3.5.2
       - name: Init Repo
         run: |
           bash -x ./ci.sh
       - name: upload release
-        uses: ncipollo/release-action@v1.10.0
+        uses: ncipollo/release-action@v1.12.0
         with:
           allowUpdates: true
           tag: "autobulid"
