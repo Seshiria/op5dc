@@ -55,7 +55,7 @@ Patch_ksu() {
         echo "CONFIG_OVERLAY_FS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
-    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" |
+    KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
         sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>KernelSU/kernel/Makefile
     echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >>KernelSU/kernel/Makefile
