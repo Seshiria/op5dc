@@ -58,10 +58,13 @@ Patch_ksu() {
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
         sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     if grep -q import_KSU_GIT_VERSION KernelSU/kernel/Makefile ;then
+        echo "Patch applied"
+    else
         cat >> KernelSU/kernel/Makefile << EOF
         ifndef KSU_GIT_VERSION
         KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
         ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)
+        $(info Using imported from variables KSU_GIT_VERSION !)
         endif
 EOF
     fi
