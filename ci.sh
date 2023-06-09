@@ -51,7 +51,7 @@ Patch_ksu() {
     #额外的修补
     grep -q CONFIG_KSU arch/arm64/configs/lineage_oneplus5_defconfig || \
         echo "CONFIG_KSU=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
-    grpe -q CONFIG_OVERLAY_FS arch/arm64/configs/lineage_oneplus5_defconfig || \
+    grep -q CONFIG_OVERLAY_FS arch/arm64/configs/lineage_oneplus5_defconfig || \
         echo "CONFIG_OVERLAY_FS=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
     #修补kernelsu/makefile
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
