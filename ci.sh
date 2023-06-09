@@ -57,8 +57,14 @@ Patch_ksu() {
     ## https://gist.github.com/0penBrain/7be59a48aba778c955d992aa69e524c5
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
         sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
-    echo "KSU_GIT_VERSION = $KSU_GIT_VERSION" >>KernelSU/kernel/Makefile
-    echo "ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)" >>KernelSU/kernel/Makefile
+    if grep -q import_KSU_GIT_VERSION KernelSU/kernel/Makefile ;then
+        cat >> KernelSU/kernel/Makefile << EOF
+        ifndef KSU_GIT_VERSION
+        KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
+        ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)
+        endif
+EOF
+    fi
     #KernelSU/kernel/ksu.h :10
     KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200) #major * 10000 + git version + 200
     #拷贝修补后的文件
@@ -128,5 +134,6 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    LLVM=1 &&
+    LLVM=1 \
+    import_KSU_GIT_VERSION=$KERNEL_SU_VERSION &&
     Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
