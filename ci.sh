@@ -64,7 +64,7 @@ Patch_ksu() {
         ifndef KSU_GIT_VERSION
         KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
         ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)
-        $(info Using imported from variables KSU_GIT_VERSION !)
+        @echo 'Used 'KSU_GIT_VERSION' imported externally !'
         endif
 EOF
     fi
