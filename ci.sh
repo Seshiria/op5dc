@@ -138,5 +138,5 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 \
-    import_KSU_GIT_VERSION=$KERNEL_SU_VERSION &&
+    import_KSU_GIT_VERSION="${KSU_GIT_VERSION}" &&
     Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
