@@ -63,15 +63,15 @@ Patch_ksu() {
         cat >> KernelSU/kernel/Makefile << EOF
 ifdef import_KSU_GIT_VERSION
     ifeq (\$(DKSU_VERSION), 16)
-        \$(info "Used KSU_GIT_VERSION imported externally !")
-        \$(info -- import_KSU_GIT_VERSION:\{import_KSU_GIT_VERSION} )
+        \$(info -- "Used KSU_GIT_VERSION imported externally !")
+        \$(info -- import_KSU_GIT_VERSION:\{import_KSU_GIT_VERSION})
         KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
         # ksu_version: major * 10000 + git version + 200 for historical reasons
         \$(eval KSU_VERSION=\$(shell expr 10000 + \$(KSU_GIT_VERSION) + 200))
         \$(info -- set KernelSU version: \$(KSU_VERSION))
         override DKSU_VERSION := \$(KSU_VERSION)
     else
-        \$(info "It seems that KSU_ VERSION has been defined, maintaining the original key value:)")
+        \$(info -- "It seems that KSU_ VERSION has been defined, maintaining the original key value")
     endif
 endif
 EOF
