@@ -64,6 +64,7 @@ Patch_ksu() {
 ifdef import_KSU_GIT_VERSION
 \$(info import_KSU_GIT_VERSION:\${import_KSU_GIT_VERSION})
 \$(info KSU_VERSION:\${KSU_VERSION})
+\$(info DKSU_VERSION:\${DKSU_VERSION})
     ifeq (\$(KSU_VERSION), 16)
         \$(info -- "Used KSU_GIT_VERSION imported externally !")
         \$(info -- import_KSU_GIT_VERSION:\${import_KSU_GIT_VERSION})
