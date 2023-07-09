@@ -114,19 +114,19 @@ cat >localversion <<EOF
 ~DCdimming-for-Seshiria
 EOF
 #llvm dc build
-make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
-    ARCH=arm64 \
-    SUBARCH=arm64 \
-    LLVM=1
-
-(make -j"$(nproc --all)" O=out \
-    ARCH=arm64 \
-    SUBARCH=arm64 \
-    CROSS_COMPILE=aarch64-linux-android- \
-    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-    CLANG_TRIPLE=aarch64-linux-gnu- \
-    LLVM=1 &&
-    Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
+#make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
+#    ARCH=arm64 \
+#    SUBARCH=arm64 \
+#    LLVM=1
+#
+#(make -j"$(nproc --all)" O=out \
+#    ARCH=arm64 \
+#    SUBARCH=arm64 \
+#    CROSS_COMPILE=aarch64-linux-android- \
+#    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+#    CLANG_TRIPLE=aarch64-linux-gnu- \
+#    LLVM=1 &&
+#    Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
 
 ##kernelsu
 Patch_ksu
