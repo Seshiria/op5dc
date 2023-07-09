@@ -62,7 +62,7 @@ Patch_ksu() {
     else
         cat >> KernelSU/kernel/Makefile << EOF
 ifdef import_KSU_GIT_VERSION
-    ifeq (\$(DKSU_VERSION), 16)
+    ifeq (\$(KSU_VERSION), 16)
         \$(info -- "Used KSU_GIT_VERSION imported externally !")
         \$(info -- import_KSU_GIT_VERSION:\{import_KSU_GIT_VERSION})
         KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
