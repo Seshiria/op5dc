@@ -61,7 +61,7 @@ Patch_ksu() {
         echo "Patch applied"
     else
         cat >> KernelSU/kernel/Makefile << EOF
-ifndef import_KSU_GIT_VERSION
+ifdef import_KSU_GIT_VERSION
 KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
 \$(info "Used KSU_GIT_VERSION imported externally !")
 # ksu_version: major * 10000 + git version + 200 for historical reasons
