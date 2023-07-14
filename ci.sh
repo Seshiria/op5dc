@@ -58,19 +58,10 @@ Patch_ksu() {
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
         sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     if grep -q import_KSU_GIT_VERSION KernelSU/kernel/Makefile ;then
-        echo "Patch applied"
+        echo "The patch already exists, you may need to reset the relevant files of ksu"
     else
-        cat >> KernelSU/kernel/Makefile << EOF
-ifdef import_KSU_GIT_VERSION
-\$(info import_KSU_GIT_VERSION:\${import_KSU_GIT_VERSION})
-\$(info -- "Used KSU_GIT_VERSION imported externally !")
-KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
-# ksu_version: major * 10000 + git version + 200 for historical reasons
-\$(eval KSU_VERSION=\$(shell expr 10000 + \$(KSU_GIT_VERSION) + 200))
-\$(info -- set KernelSU version: \$(KSU_VERSION))
-override DKSU_VERSION := \$(KSU_VERSION)
-endif
-EOF
+        echo "Patching..." 
+        patch -p1 <../ksu_patch/import_patch.diff
     fi
     #KernelSU/kernel/ksu.h :10
     KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200) #major * 10000 + git version + 200
