@@ -1,10 +1,10 @@
 diff --git a/drivers/video/fbdev/msm/Kconfig b/drivers/video/fbdev/msm/Kconfig
-index f7f1c47..f61be89 100644
+index 03ee89a..f36b30c 100644
 --- a/drivers/video/fbdev/msm/Kconfig
 +++ b/drivers/video/fbdev/msm/Kconfig
-@@ -171,4 +171,19 @@ config IRIS2P_DRC_SUPPORT
- 	Say y to enable
- #endif
+@@ -122,4 +122,19 @@ config FB_MSM_MDSS_XLOG_DEBUG
+ 	driver during fatal errors and enable some display-driver logging
+ 	into an internal buffer (this avoids logging overhead).
  
 +config FB_MSM_MDSS_KCAL_CTRL
 +	depends on FB_MSM_MDSS
@@ -23,7 +23,7 @@ index f7f1c47..f61be89 100644
 +
  endif
 diff --git a/drivers/video/fbdev/msm/Makefile b/drivers/video/fbdev/msm/Makefile
-index 6483727..078a879 100644
+index dfbc604..472305f 100644
 --- a/drivers/video/fbdev/msm/Makefile
 +++ b/drivers/video/fbdev/msm/Makefile
 @@ -31,6 +31,8 @@ ifeq ($(CONFIG_FB_MSM_MDSS),y)
@@ -35,11 +35,10 @@ index 6483727..078a879 100644
  mdss-dsi-objs := mdss_dsi.o mdss_dsi_host.o mdss_dsi_cmd.o mdss_dsi_status.o
  mdss-dsi-objs += mdss_dsi_panel.o
  mdss-dsi-objs += msm_mdss_io_8974.o
-@@ -68,3 +70,5 @@ obj-$(CONFIG_FB_MSM_QPIC_ILI_QVGA_PANEL) += qpic_panel_ili_qvga.o
- 
- obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o mdss_util.o
+@@ -66,3 +68,4 @@ obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o mdss_util.o
  obj-$(CONFIG_COMPAT) += mdss_compat_utils.o
-+
+ 
+ obj-$(CONFIG_FB_MSM_MDSS) += mdss_livedisplay.o
 +obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o
 diff --git a/drivers/video/fbdev/msm/flicker_free.c b/drivers/video/fbdev/msm/flicker_free.c
 new file mode 100644
@@ -551,10 +550,10 @@ index 0000000..6dd6dbb
 +module_exit( cleanup );
 +
 diff --git a/drivers/video/fbdev/msm/mdss_dsi.c b/drivers/video/fbdev/msm/mdss_dsi.c
-index a8429c7..67e1ced 100644
+index cc95a52..e927e99 100644
 --- a/drivers/video/fbdev/msm/mdss_dsi.c
 +++ b/drivers/video/fbdev/msm/mdss_dsi.c
-@@ -3117,6 +3117,14 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
+@@ -3107,6 +3107,14 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
  					&ctrl_pdata->dba_work, HZ);
  		}
  		break;
@@ -566,37 +565,37 @@ index a8429c7..67e1ced 100644
 +	case MDSS_EVENT_PANEL_GET_HBM_MODE:
 +		rc = mdss_dsi_panel_get_hbm_mode(ctrl_pdata);
 +		break;
- 	case MDSS_EVENT_PANEL_SET_SRGB_MODE:
- 		ctrl_pdata->SRGB_mode = (int)(unsigned long) arg;
- 		if (ctrl_pdata->SRGB_mode == 1)
+ 	case MDSS_EVENT_DSI_TIMING_DB_CTRL:
+ 		mdss_dsi_timing_db_ctrl(ctrl_pdata, (int)(unsigned long)arg);
+ 		break;
 diff --git a/drivers/video/fbdev/msm/mdss_dsi.h b/drivers/video/fbdev/msm/mdss_dsi.h
-index 838c4d0..c478752 100644
+index 36476bd..f173849 100644
 --- a/drivers/video/fbdev/msm/mdss_dsi.h
 +++ b/drivers/video/fbdev/msm/mdss_dsi.h
-@@ -586,6 +586,9 @@ struct mdss_dsi_ctrl_pdata {
+@@ -580,6 +580,9 @@ struct mdss_dsi_ctrl_pdata {
  	int disp_vci_en_gpio;
  	int disp_poc_en_gpio;
  
 +	struct dsi_panel_cmds hbm_on_cmds;
 +	struct dsi_panel_cmds hbm_off_cmds;
 +	int hbm_mode;
+ 	bool bl_high2bit;
  
- 	bool is_panel_on;
- 	bool setting_mode_loaded;
-@@ -650,6 +653,8 @@ struct dsi_status_data {
- int mdss_dsi_panel_set_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level);
- int mdss_dsi_panel_get_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl);
+ 	struct kobject *kobj;
+@@ -604,6 +607,8 @@ struct dsi_status_data {
+ 	struct msm_fb_data_type *mfd;
+ };
  
 +int mdss_dsi_panel_set_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level);
 +int mdss_dsi_panel_get_hbm_mode(struct mdss_dsi_ctrl_pdata *ctrl);
+ int mdss_dsi_disp_poc_en(struct mdss_panel_data *pdata, int enable);
+ int mdss_dsi_disp_vci_en(struct mdss_panel_data *pdata, int enable);
  
- int mdss_dsi_panel_set_adobe_rgb_mode
- 	(struct mdss_dsi_ctrl_pdata *ctrl, int level);
 diff --git a/drivers/video/fbdev/msm/mdss_dsi_panel.c b/drivers/video/fbdev/msm/mdss_dsi_panel.c
-index 4e6c91a..e7c51b6 100644
+index a31e719..eb48f2b 100644
 --- a/drivers/video/fbdev/msm/mdss_dsi_panel.c
 +++ b/drivers/video/fbdev/msm/mdss_dsi_panel.c
-@@ -1117,6 +1117,41 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
+@@ -1015,6 +1015,40 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
  	}
  }
  
@@ -634,53 +633,37 @@ index 4e6c91a..e7c51b6 100644
 +{
 +    return ctrl->hbm_mode;
 +}
-+
- int mdss_dsi_panel_set_srgb_mode(struct mdss_dsi_ctrl_pdata *ctrl, int level)
+ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
  {
- 	struct dsi_panel_cmds *srgb_on_cmds;
-@@ -1438,6 +1473,11 @@ end:
- 		mdss_dsi_panel_set_adaption_mode(ctrl,
- 		   mdss_dsi_panel_get_adaption_mode(ctrl));
- 	}
-+
-+	if (mdss_dsi_panel_get_hbm_mode(ctrl)) {
-+		mdss_dsi_panel_set_hbm_mode(ctrl,
-+		   mdss_dsi_panel_get_hbm_mode(ctrl));
-+	}
- 	 return ret;
- }
+ 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
+@@ -3063,6 +3097,12 @@ static int mdss_panel_parse_dt(struct device_node *np,
+ 	pinfo->is_dba_panel = of_property_read_bool(np,
+ 			"qcom,dba-panel");
  
-@@ -3481,7 +3521,12 @@ static int mdss_panel_parse_dt(struct device_node *np,
- 	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->dci_p3_off_cmds,
- 		"qcom,mdss-dsi-panel-dci-p3-off-command",
- 		"qcom,mdss-dsi-dci-p3-command-state");
--
 +	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_on_cmds,
 +		"qcom,mdss-dsi-panel-hbm-on-command",
 +		"qcom,mdss-dsi-hbm-command-state");
 +	mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_off_cmds,
 +		"qcom,mdss-dsi-panel-hbm-off-command",
 +		"qcom,mdss-dsi-hbm-command-state");
+ 	ctrl_pdata->bl_high2bit = of_property_read_bool(np,
+ 					"qcom,mdss-bl-high2bit");
  
- 	ctrl_pdata->high_brightness_panel= of_property_read_bool(np,
- 					"qcom,mdss-dsi-high-brightness-panel");
 diff --git a/drivers/video/fbdev/msm/mdss_fb.c b/drivers/video/fbdev/msm/mdss_fb.c
-index ac9dd65..274a37b 100644
+index 64f8608..bf470be 100644
 --- a/drivers/video/fbdev/msm/mdss_fb.c
 +++ b/drivers/video/fbdev/msm/mdss_fb.c
-@@ -76,6 +76,11 @@
+@@ -76,6 +76,9 @@
+ #else
+ #define BLANK_FLAG_LP	FB_BLANK_VSYNC_SUSPEND
  #define BLANK_FLAG_ULP	FB_BLANK_NORMAL
- #endif
- 
 +#ifdef CONFIG_FLICKER_FREE
 +struct msm_fb_data_type *ff_mfd_copy;
 +u32 ff_bkl_lvl_cpy;
-+#endif
-+
+ #endif
+ 
  /*
-  * Time period for fps calulation in micro seconds.
-  * Default value is set to 1 sec.
-@@ -911,6 +916,44 @@ end:
+@@ -913,6 +916,43 @@ end:
  	return len;
  }
  
@@ -721,41 +704,10 @@ index ac9dd65..274a37b 100644
 +
 +static DEVICE_ATTR(hbm, S_IRUGO | S_IWUSR,
 +mdss_fb_get_hbm_mode, mdss_fb_set_hbm_mode);
-+
- static ssize_t mdss_fb_get_srgb_mode(struct device *dev,
+ static ssize_t mdss_fb_get_persist_mode(struct device *dev,
  		struct device_attribute *attr, char *buf)
  {
-@@ -949,6 +992,9 @@ static ssize_t mdss_fb_set_srgb_mode(struct device *dev,
- 	return count;
- }
- 
-+static DEVICE_ATTR(SRGB, S_IRUGO | S_IWUSR,
-+	mdss_fb_get_srgb_mode, mdss_fb_set_srgb_mode);
-+
- static DEVICE_ATTR(srgb, S_IRUGO | S_IWUSR,
- 	mdss_fb_get_srgb_mode, mdss_fb_set_srgb_mode);
- 
-@@ -991,6 +1037,9 @@ static ssize_t mdss_fb_set_adobe_rgb_mode(struct device *dev,
- 	return count;
- }
- 
-+static DEVICE_ATTR(Adobe_RGB, S_IRUGO | S_IWUSR,
-+	mdss_fb_get_adobe_rgb_mode, mdss_fb_set_adobe_rgb_mode);
-+
- static DEVICE_ATTR(adobe_rgb, S_IRUGO | S_IWUSR,
- 	mdss_fb_get_adobe_rgb_mode, mdss_fb_set_adobe_rgb_mode);
- 
-@@ -1032,6 +1081,9 @@ static ssize_t mdss_fb_set_dci_p3_mode(struct device *dev,
- 	return count;
- }
- 
-+static DEVICE_ATTR(DCI_P3, S_IRUGO | S_IWUSR,
-+	mdss_fb_get_dci_p3_mode, mdss_fb_set_dci_p3_mode);
-+
- static DEVICE_ATTR(dci_p3, S_IRUGO | S_IWUSR,
- 	mdss_fb_get_dci_p3_mode, mdss_fb_set_dci_p3_mode);
- 
-@@ -1221,6 +1273,10 @@ static struct attribute *mdss_fb_attrs[] = {
+@@ -976,6 +1016,10 @@ static struct attribute *mdss_fb_attrs[] = {
  	&dev_attr_msm_fb_panel_status.attr,
  	&dev_attr_msm_fb_dfps_mode.attr,
  	&dev_attr_measured_fps.attr,
@@ -763,10 +715,10 @@ index ac9dd65..274a37b 100644
 +	&dev_attr_hbm.attr,
 +	&dev_attr_Adobe_RGB.attr,
 +	&dev_attr_DCI_P3.attr,
- 	&dev_attr_srgb.attr,
- 	&dev_attr_adobe_rgb.attr,
- 	&dev_attr_dci_p3.attr,
-@@ -1629,6 +1685,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
+ 	&dev_attr_msm_fb_persist_mode.attr,
+ 	&dev_attr_idle_power_collapse.attr,
+ 	NULL,
+@@ -1378,6 +1422,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
  
  	/* android supports only one lcd-backlight/lcd for now */
  	if (!lcd_backlight_registered) {
@@ -775,7 +727,7 @@ index ac9dd65..274a37b 100644
  		if (led_classdev_register(&pdev->dev, &backlight_led))
  			pr_err("led_classdev_register failed\n");
  		else
-@@ -2031,8 +2089,15 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+@@ -1780,8 +1826,15 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
  		} else {
  			if (mfd->bl_level != bkl_lvl)
  				bl_notify_needed = true;
@@ -791,7 +743,7 @@ index ac9dd65..274a37b 100644
  			mfd->bl_level = bkl_lvl;
  			mfd->bl_level_scaled = temp;
  		}
-@@ -2045,6 +2110,17 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+@@ -1794,6 +1847,17 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
  	}
  }
  
@@ -809,7 +761,7 @@ index ac9dd65..274a37b 100644
  void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
  {
  	struct mdss_panel_data *pdata;
-@@ -2066,7 +2142,13 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
+@@ -1815,7 +1879,13 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
  				mdss_fb_bl_update_notify(mfd,
  					NOTIFY_TYPE_BL_AD_ATTEN_UPDATE);
  			mdss_fb_bl_update_notify(mfd, NOTIFY_TYPE_BL_UPDATE);
@@ -823,7 +775,7 @@ index ac9dd65..274a37b 100644
  			mfd->bl_level_scaled = mfd->unset_bl_level;
  			mfd->allow_bl_update = true;
  		}
-@@ -3426,6 +3508,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
+@@ -3175,6 +3245,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
  		}
  		if (ret == -ETIME)
  			ret = NOTIFY_BAD;
@@ -1028,19 +980,18 @@ index a5ec709..12f6607 100644
  
  	if ((config->flags & MDP_PP_OPS_DISABLE)) {
 diff --git a/drivers/video/fbdev/msm/mdss_panel.h b/drivers/video/fbdev/msm/mdss_panel.h
-index cd1f2a3..203d536 100644
+index 059bc6b..c6f2676 100644
 --- a/drivers/video/fbdev/msm/mdss_panel.h
 +++ b/drivers/video/fbdev/msm/mdss_panel.h
-@@ -308,7 +308,8 @@ enum mdss_intf_events {
+@@ -308,6 +308,8 @@ enum mdss_intf_events {
  	MDSS_EVENT_DEEP_COLOR,
  	MDSS_EVENT_DISABLE_PANEL,
  	MDSS_EVENT_UPDATE_PANEL_PPM,
--
 +	MDSS_EVENT_PANEL_SET_HBM_MODE,
 +	MDSS_EVENT_PANEL_GET_HBM_MODE,
- 	MDSS_EVENT_PANEL_SET_SRGB_MODE,
- 	MDSS_EVENT_PANEL_GET_SRGB_MODE,
- 	MDSS_EVENT_PANEL_SET_ADOBE_RGB_MODE,
+ 	MDSS_EVENT_DSI_TIMING_DB_CTRL,
+ 	MDSS_EVENT_AVR_MODE,
+ 	MDSS_EVENT_REGISTER_CLAMP_HANDLER,
 -- 
-2.32.0.windows.2
+2.41.0.windows.1
 
