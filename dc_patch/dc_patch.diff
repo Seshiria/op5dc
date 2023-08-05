@@ -569,7 +569,7 @@ index cc95a52..e927e99 100644
  		mdss_dsi_timing_db_ctrl(ctrl_pdata, (int)(unsigned long)arg);
  		break;
 diff --git a/drivers/video/fbdev/msm/mdss_dsi.h b/drivers/video/fbdev/msm/mdss_dsi.h
-index 36476bd..c583f5d 100644
+index 36476bd..81e52fa 100644
 --- a/drivers/video/fbdev/msm/mdss_dsi.h
 +++ b/drivers/video/fbdev/msm/mdss_dsi.h
 @@ -446,6 +446,7 @@ struct mdss_dsi_ctrl_pdata {
@@ -580,17 +580,20 @@ index 36476bd..c583f5d 100644
  	u8 ctrl_state;
  	int panel_mode;
  	int irq_cnt;
-@@ -580,6 +581,9 @@ struct mdss_dsi_ctrl_pdata {
+@@ -580,6 +581,12 @@ struct mdss_dsi_ctrl_pdata {
  	int disp_vci_en_gpio;
  	int disp_poc_en_gpio;
  
 +	struct dsi_panel_cmds hbm_on_cmds;
 +	struct dsi_panel_cmds hbm_off_cmds;
 +	int hbm_mode;
++
++	bool is_panel_on;
++
  	bool bl_high2bit;
  
  	struct kobject *kobj;
-@@ -604,6 +608,8 @@ struct dsi_status_data {
+@@ -604,6 +611,8 @@ struct dsi_status_data {
  	struct msm_fb_data_type *mfd;
  };
  
