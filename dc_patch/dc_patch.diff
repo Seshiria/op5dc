@@ -661,7 +661,7 @@ index a31e719..eb48f2b 100644
  					"qcom,mdss-bl-high2bit");
  
 diff --git a/drivers/video/fbdev/msm/mdss_fb.c b/drivers/video/fbdev/msm/mdss_fb.c
-index 64f8608..697292e 100644
+index 64f8608..a7a7301 100644
 --- a/drivers/video/fbdev/msm/mdss_fb.c
 +++ b/drivers/video/fbdev/msm/mdss_fb.c
 @@ -78,6 +78,11 @@
@@ -724,10 +724,10 @@ index 64f8608..697292e 100644
  	&dev_attr_msm_fb_panel_status.attr,
  	&dev_attr_msm_fb_dfps_mode.attr,
  	&dev_attr_measured_fps.attr,
-+	&dev_attr_SRGB.attr,
++
 +	&dev_attr_hbm.attr,
-+	&dev_attr_Adobe_RGB.attr,
-+	&dev_attr_DCI_P3.attr,
++
++
  	&dev_attr_msm_fb_persist_mode.attr,
  	&dev_attr_idle_power_collapse.attr,
  	NULL,
