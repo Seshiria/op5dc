@@ -661,20 +661,22 @@ index a31e719..eb48f2b 100644
  					"qcom,mdss-bl-high2bit");
  
 diff --git a/drivers/video/fbdev/msm/mdss_fb.c b/drivers/video/fbdev/msm/mdss_fb.c
-index 64f8608..bf470be 100644
+index 64f8608..697292e 100644
 --- a/drivers/video/fbdev/msm/mdss_fb.c
 +++ b/drivers/video/fbdev/msm/mdss_fb.c
-@@ -76,6 +76,9 @@
- #else
- #define BLANK_FLAG_LP	FB_BLANK_VSYNC_SUSPEND
+@@ -78,6 +78,11 @@
  #define BLANK_FLAG_ULP	FB_BLANK_NORMAL
+ #endif
+ 
 +#ifdef CONFIG_FLICKER_FREE
 +struct msm_fb_data_type *ff_mfd_copy;
 +u32 ff_bkl_lvl_cpy;
- #endif
- 
++#endif
++
  /*
-@@ -913,6 +916,43 @@ end:
+  * Time period for fps calulation in micro seconds.
+  * Default value is set to 1 sec.
+@@ -913,6 +918,43 @@ end:
  	return len;
  }
  
@@ -718,7 +720,7 @@ index 64f8608..bf470be 100644
  static ssize_t mdss_fb_get_persist_mode(struct device *dev,
  		struct device_attribute *attr, char *buf)
  {
-@@ -976,6 +1016,10 @@ static struct attribute *mdss_fb_attrs[] = {
+@@ -976,6 +1018,10 @@ static struct attribute *mdss_fb_attrs[] = {
  	&dev_attr_msm_fb_panel_status.attr,
  	&dev_attr_msm_fb_dfps_mode.attr,
  	&dev_attr_measured_fps.attr,
@@ -729,7 +731,7 @@ index 64f8608..bf470be 100644
  	&dev_attr_msm_fb_persist_mode.attr,
  	&dev_attr_idle_power_collapse.attr,
  	NULL,
-@@ -1378,6 +1422,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
+@@ -1378,6 +1424,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
  
  	/* android supports only one lcd-backlight/lcd for now */
  	if (!lcd_backlight_registered) {
@@ -738,7 +740,7 @@ index 64f8608..bf470be 100644
  		if (led_classdev_register(&pdev->dev, &backlight_led))
  			pr_err("led_classdev_register failed\n");
  		else
-@@ -1780,8 +1826,15 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+@@ -1780,8 +1828,15 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
  		} else {
  			if (mfd->bl_level != bkl_lvl)
  				bl_notify_needed = true;
@@ -754,7 +756,7 @@ index 64f8608..bf470be 100644
  			mfd->bl_level = bkl_lvl;
  			mfd->bl_level_scaled = temp;
  		}
-@@ -1794,6 +1847,17 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
+@@ -1794,6 +1849,17 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
  	}
  }
  
@@ -772,7 +774,7 @@ index 64f8608..bf470be 100644
  void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
  {
  	struct mdss_panel_data *pdata;
-@@ -1815,7 +1879,13 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
+@@ -1815,7 +1881,13 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
  				mdss_fb_bl_update_notify(mfd,
  					NOTIFY_TYPE_BL_AD_ATTEN_UPDATE);
  			mdss_fb_bl_update_notify(mfd, NOTIFY_TYPE_BL_UPDATE);
@@ -786,7 +788,7 @@ index 64f8608..bf470be 100644
  			mfd->bl_level_scaled = mfd->unset_bl_level;
  			mfd->allow_bl_update = true;
  		}
-@@ -3175,6 +3245,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
+@@ -3175,6 +3247,7 @@ static int __mdss_fb_sync_buf_done_callback(struct notifier_block *p,
  		}
  		if (ret == -ETIME)
  			ret = NOTIFY_BAD;
