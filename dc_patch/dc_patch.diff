@@ -667,7 +667,7 @@ index a31e719..479e7de 100644
  					"qcom,mdss-bl-high2bit");
  
 diff --git a/drivers/video/fbdev/msm/mdss_fb.c b/drivers/video/fbdev/msm/mdss_fb.c
-index 64f8608..a7a7301 100644
+index 64f8608..0272859 100644
 --- a/drivers/video/fbdev/msm/mdss_fb.c
 +++ b/drivers/video/fbdev/msm/mdss_fb.c
 @@ -78,6 +78,11 @@
@@ -737,6 +737,15 @@ index 64f8608..a7a7301 100644
  	&dev_attr_msm_fb_persist_mode.attr,
  	&dev_attr_idle_power_collapse.attr,
  	NULL,
+@@ -992,7 +1038,7 @@ static int mdss_fb_create_sysfs(struct msm_fb_data_type *mfd)
+ 	rc = sysfs_create_group(&mfd->fbi->dev->kobj, &mdss_fb_attr_group);
+ 	if (rc)
+ 		pr_err("sysfs group creation failed, rc=%d\n", rc);
+-	return mdss_livedisplay_create_sysfs(mfd);
++	return rc;
+ }
+ 
+ static void mdss_fb_remove_sysfs(struct msm_fb_data_type *mfd)
 @@ -1378,6 +1424,8 @@ static int mdss_fb_probe(struct platform_device *pdev)
  
  	/* android supports only one lcd-backlight/lcd for now */
