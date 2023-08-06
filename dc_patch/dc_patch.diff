@@ -23,7 +23,7 @@ index 03ee89a..f36b30c 100644
 +
  endif
 diff --git a/drivers/video/fbdev/msm/Makefile b/drivers/video/fbdev/msm/Makefile
-index dfbc604..472305f 100644
+index dfbc604..1808aa5 100644
 --- a/drivers/video/fbdev/msm/Makefile
 +++ b/drivers/video/fbdev/msm/Makefile
 @@ -31,6 +31,8 @@ ifeq ($(CONFIG_FB_MSM_MDSS),y)
@@ -598,7 +598,7 @@ index 36476bd..81e52fa 100644
  int mdss_dsi_disp_vci_en(struct mdss_panel_data *pdata, int enable);
  
 diff --git a/drivers/video/fbdev/msm/mdss_dsi_panel.c b/drivers/video/fbdev/msm/mdss_dsi_panel.c
-index a31e719..eb48f2b 100644
+index a31e719..479e7de 100644
 --- a/drivers/video/fbdev/msm/mdss_dsi_panel.c
 +++ b/drivers/video/fbdev/msm/mdss_dsi_panel.c
 @@ -1015,6 +1015,40 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
@@ -642,7 +642,18 @@ index a31e719..eb48f2b 100644
  static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
  {
  	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
-@@ -3063,6 +3097,12 @@ static int mdss_panel_parse_dt(struct device_node *np,
+@@ -1065,6 +1099,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
+ 
+ end:
+ 	pr_debug("%s:-\n", __func__);
++	if (mdss_dsi_panel_get_hbm_mode(ctrl)) {
++		mdss_dsi_panel_set_hbm_mode(ctrl,
++		   mdss_dsi_panel_get_hbm_mode(ctrl));
++	}
+ 	return ret;
+ }
+ 
+@@ -3063,6 +3101,12 @@ static int mdss_panel_parse_dt(struct device_node *np,
  	pinfo->is_dba_panel = of_property_read_bool(np,
  			"qcom,dba-panel");
  
