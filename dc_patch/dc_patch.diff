@@ -35,11 +35,6 @@ index dfbc604..472305f 100644
  mdss-dsi-objs := mdss_dsi.o mdss_dsi_host.o mdss_dsi_cmd.o mdss_dsi_status.o
  mdss-dsi-objs += mdss_dsi_panel.o
  mdss-dsi-objs += msm_mdss_io_8974.o
-@@ -66,3 +68,4 @@ obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o mdss_util.o
- obj-$(CONFIG_COMPAT) += mdss_compat_utils.o
- 
- obj-$(CONFIG_FB_MSM_MDSS) += mdss_livedisplay.o
-+obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o
 diff --git a/drivers/video/fbdev/msm/flicker_free.c b/drivers/video/fbdev/msm/flicker_free.c
 new file mode 100644
 index 0000000..d1f2a32
