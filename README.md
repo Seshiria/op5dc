@@ -156,6 +156,7 @@ make -j"$(nproc --all)" O=out \
 
 * 内核代码：https://github.com/LineageOS/android_kernel_oneplus_msm8998
 * DC调光 ：https://github.com/lyq1996/android_kernel_oneplus_msm8998
+* DC调光（优化）：https://github.com/TheNoFace/kernel_oneplus_msm8998/commit/6879c36c6a2c5d5b88d6b6dd64587990490bc8b6
 * 鸣谢：[迅速入门Android内核编译 & 一加5 DC调光](https://makiras.org/archives/173?amp)
 * 鸣谢：[DC调光进阶版的开发过程及思路](https://www.akr-developers.com/d/273)
 * 交叉编译（gcc）：https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9
