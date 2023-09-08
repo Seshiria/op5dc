@@ -11,12 +11,8 @@ jobs:
       - name: Init Repo
         run: |
           bash -x ./ci.sh
-      - name: upload release
-        uses: ncipollo/release-action@v1.12.0
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          allowUpdates: true
-          tag: "test"
-          body: ${{ github.event.release.body }}
-          prerelease: "true"
-          artifacts: "releases/*.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: testbuild
+          path: releases/*.zip
