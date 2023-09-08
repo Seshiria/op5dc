@@ -58,15 +58,10 @@ Patch_ksu() {
     KSU_GIT_VERSION=$(curl -I -k "https://api.github.com/repos/tiann/KernelSU/commits?per_page=1&sha=$KERNELSU_HASH" | \
         sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p')
     if grep -q import_KSU_GIT_VERSION KernelSU/kernel/Makefile ;then
-        echo "Patch applied"
+        echo "The patch already exists, you may need to reset the relevant files of ksu"
     else
-        cat >> KernelSU/kernel/Makefile << EOF
-ifndef KSU_GIT_VERSION
-KSU_GIT_VERSION = \$(import_KSU_GIT_VERSION)
-ccflags-y += -DKSU_GIT_VERSION=\$(KSU_GIT_VERSION)
-\$(info "Used KSU_GIT_VERSION imported externally !")
-endif
-EOF
+        echo "Patching..." 
+        patch -p1 <../ksu_patch/import_patch.diff
     fi
     #KernelSU/kernel/ksu.h :10
     KERNEL_SU_VERSION=$(expr "$KSU_GIT_VERSION" + 10200) #major * 10000 + git version + 200
@@ -97,6 +92,22 @@ Initsystem
 test -d releases || mkdir releases
 ls -lh
 cd ./android_kernel_oneplus_msm8998-"${KERNEL_HASH}"/
+
+
+#llvm dc build
+make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    LLVM=1
+
+(make -j"$(nproc --all)" O=out \
+    ARCH=arm64 \
+    SUBARCH=arm64 \
+    CROSS_COMPILE=aarch64-linux-android- \
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
+    LLVM=1 &&
+    Releases "op5lin20") || (echo "build error" && exit 1)
 
 ##dc patch
 Patch_dc
@@ -138,5 +149,5 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 \
-    import_KSU_GIT_VERSION=$KERNEL_SU_VERSION &&
+    import_KSU_GIT_VERSION="${KSU_GIT_VERSION}" &&
     Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
