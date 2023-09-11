@@ -1,21 +1,22 @@
 # oneplus 5 (cheeseburger) DC Dimming  kernel on lineageOS
 
-[![Build lineageOS Kernel](https://github.com/Seshiria/op5dc/actions/workflows/main.yml/badge.svg)](https://github.com/Seshiria/op5dc/actions/workflows/main.yml)
-
 适用于一加5(cheeseburger)、基于lineageOS的dc调光内核。
 
-由于第三方内核在一加5、官方lineageOS 16上，出现WiFi不可用的问题，所以把DC调光移植回lineageOS官方内核。
+项目起初是由于第三方内核在一加5、官方lineageOS 16上，出现WiFi不可用的问题，所以把DC调光移植回lineageOS官方内核。
 
 特性：
 - 跟随lineageOS维护的内核持续更新。
 - 使用aosp的ndk clang构建。
 - 仅包含官方功能。
+- 含有kernelsu的内核（实验性）
 
 **本项目仅维护dc调光和构建编译。**
 
 ## 安装与使用内核
 
 刷入前建议备份当前boot.img。打开本项目的release页面，根据tag查找对应的内核版本，在recovery模式下刷入，然后进入系统安装下方的控制器软件。
+
+recovey：https://twrp.me/oneplus/oneplus5-5t.html
 
 控制器：[DC%20tuner.apk](https://github.com/Seshiria/op5dc/releases/download/4.4.302v20230102/DC.Tuner.1.0.apk)
 
@@ -57,12 +58,6 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 
 ### 兼容性
 
-~~2020年12月31日：由于官方lineageOS主线已经切换到17.1，针对lineageOS16的测试已经结束，建议更新到最新的lineageOS版本。~~ 
-
-~~2021年4月1日：官方lineageOS18.1已经发布，所有测试迁移到Android11，建议更新到最新的lineageOS版本。~~ 
-
-~~2022年5月23日：官方lineageOS19.1已经发布，所有测试迁移到Android12，请更新到最新的lineageOS版本。~~
-
 **2023年1月2日，官方lineagesOS20.0已经发布，所有测试迁移到Android13，请更新到最新的lineageOS版本。**
 
 #### 系统与内核兼容性
@@ -75,9 +70,6 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 |lineageOS19.1(android12)| 4.4.302v3 - 4.4.302v20221205 |
 |lineageOS20(android13)| 4.4.302v20230102 and up |
 
-
-注：O代表已经经过真机的兼容测试，X代表未经过测试。
-
 lineageOS16（Android9）最后经过测试的内核版本为4.4.153。
 
 lineageOS17（Android10）最后经过测试的版本为4.4.258。（注意4.4.258v2为不同的版本，请参阅发布的tag）
@@ -86,7 +78,7 @@ lineageOS18.1(Android11)最后经过测试的内核版本为4.4.302v2。（注�
 
 ## 关于kernelsu
 
-kernelsu 是一个 Android 上基于内核的 root 方案。它和 DC Dimming **并无相关**，意味着您可以只用dc功能，而不需要依赖 kernelsu 。
+kernelsu 是一个 Android 上基于内核的 root 方案。它和 DC Dimming **并无相关**，意味着您可以只用dc Dimming，而不需要依赖 kernelsu 。
 
 
 因为 kernelsu 项目尚在早期的开发中，引入 kernelsu 仅为了学习和研究，所以本项目对 kernelsu 相关的构建无任何保证，亦可能在未来移除 kernelsu 的相关代码，如果您使用到含有 kernelsu 的构建，请确保自己有能力从内核错误中恢复。
@@ -130,8 +122,7 @@ bash -x ci.sh
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
     SUBARCH=arm64 \
-    HOSTCC=clang \
-    HOSTCXX=clang++
+    LLVM=1
 
 make -j"$(nproc --all)" O=out \
     ARCH=arm64 \
@@ -139,26 +130,17 @@ make -j"$(nproc --all)" O=out \
     CROSS_COMPILE=aarch64-linux-android- \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    HOSTCC=clang \
-    HOSTCXX=clang++ \
-    CC=clang \
-    CXX=clang++ \
-    AR=llvm-ar \
-    NM=llvm-nm \
-    AS=llvm-as \
-    OBJCOPY=llvm-objcopy \
-    OBJDUMP=llvm-objdump \
-    STRIP=llvm-strip
+    LLVM=1
 ##################################################
 ````
 
 ## 引用和参考过的资料
 
+本项目开发中参考了许多开源项目/公开文档，非常感谢各位作者的付出，排名不分先后：
+
 * 内核代码：https://github.com/LineageOS/android_kernel_oneplus_msm8998
 * DC调光 ：https://github.com/lyq1996/android_kernel_oneplus_msm8998
 * DC调光（优化）：https://github.com/TheNoFace/kernel_oneplus_msm8998/commit/6879c36c6a2c5d5b88d6b6dd64587990490bc8b6
-* 鸣谢：[迅速入门Android内核编译 & 一加5 DC调光](https://makiras.org/archives/173?amp)
-* 鸣谢：[DC调光进阶版的开发过程及思路](https://www.akr-developers.com/d/273)
 * 交叉编译（gcc）：https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9
 * 交叉编译（gcc）：https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9
 * 工具链：https://github.com/LineageOS/android_prebuilts_build-tools
@@ -166,4 +148,11 @@ make -j"$(nproc --all)" O=out \
 * Anykernel3：https://github.com/osm0sis/AnyKernel3
 * 代码检出：https://github.com/actions/checkout
 * 自动发布：https://github.com/ncipollo/release-action
+* 上传文件：https://github.com/actions/upload-artifact
 * kernelsu：https://github.com/tiann/KernelSU
+* 移植kenrlesu实现的部分代码：https://github.com/sticpaper/android_kernel_xiaomi_msm8998-ksu
+* 鸣谢：[迅速入门Android内核编译 & 一加5 DC调光](https://makiras.org/archives/173?amp)
+* 鸣谢：[DC调光进阶版的开发过程及思路](https://www.akr-developers.com/d/273)
+* 鸣谢：https://github.com/xiaoleGun/KernelSU_Action
+
+部分项目/文档由于各种问题未能记录，深表歉意。
