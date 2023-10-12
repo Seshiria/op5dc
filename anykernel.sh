@@ -4,7 +4,7 @@
 ### AnyKernel setup
 # global properties
 properties() { '
-kernel.string=oneplus5 lineageOS dc kernel by Seshiria @ GitHub
+kernel.string=oneplus5/5T lineageOS dc kernel by Seshiria @ GitHub
 do.devicecheck=1
 do.modules=0
 do.systemless=1

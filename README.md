@@ -1,6 +1,6 @@
-# oneplus 5 (cheeseburger) DC Dimming  kernel on lineageOS
+# oneplus 5 (cheeseburger) / 5T (dumpling) DC Dimming  kernel on lineageOS
 
-适用于一加5(cheeseburger)、基于lineageOS的dc调光内核。
+适用于一加5(cheeseburger)/5T(dumpling)、基于lineageOS的dc调光内核。
 
 项目起初是由于第三方内核在一加5、官方lineageOS 16上，出现WiFi不可用的问题，所以把DC调光移植回lineageOS官方内核。
 
@@ -44,7 +44,7 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 
 **有关kernelsu相关的内容，请参阅后续的“关于kernelsu”章节**
 
-在release'页面标注：“20220919 and up”，说明适用于lineage-19.1-20220919-nightly-cheeseburger-signed.zip。
+在release'页面标注：“20220919 and up”，说明适用于lineage-19.1-20220919-nightly-cheeseburger-signed.zip、lineage-19.1-20220920-nightly-dumpling-signed.zip（5T在LineageOS官方构建时间晚一天）。
 
 由于官方维护者在维护系统内核的时候，修改内核但并不是会同时合并kernel的主线代码，所以会导致同一个内核版本号发布多次的问题。
 
@@ -58,7 +58,7 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 
 ### 兼容性
 
-**2023年1月2日，官方lineagesOS20.0已经发布，所有测试迁移到Android13，请更新到最新的lineageOS版本。**
+**2023年1月2日，官方lineageOS20.0已经发布，所有测试迁移到Android13，请更新到最新的lineageOS版本。**
 
 #### 系统与内核兼容性
 
