@@ -98,7 +98,7 @@ Patch_dc
 #Write flag
 test -f localversion || touch localversion
 cat >localversion <<EOF
-~DCdimming-for-Seshiria
+-0
 EOF
 #llvm dc build
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
@@ -119,7 +119,7 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
 Patch_ksu
 test -f localversion || touch localversion
 cat >localversion <<EOF
-~DCdimming-ksu-for-Seshiria
+-1
 EOF
 make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     ARCH=arm64 \
