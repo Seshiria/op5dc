@@ -113,7 +113,7 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 &&
-    Releases "op5lin20-dc") || (echo "dc build error" && exit 1)
+    Releases "op5lin21-dc") || (echo "dc build error" && exit 1)
 
 ##kernelsu
 Patch_ksu
@@ -134,4 +134,4 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 \
     import_KSU_GIT_VERSION="${KSU_GIT_VERSION}" &&
-    Releases "op5lin20-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
+    Releases "op5lin21-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)

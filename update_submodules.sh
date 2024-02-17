@@ -57,7 +57,7 @@ KERNEL_URL=https://github.com/LineageOS/android_kernel_oneplus_msm8998/archive/"
 EOF
 }
 
-lineage_branch=lineage-20
+lineage_branch=lineage-21
 # LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9
 up_hash=$(get_hash "LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9" "lineage-19.1")
 compare_hash "AARCH64_GCC_HASH" "$up_hash"
