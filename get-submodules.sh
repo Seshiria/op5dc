@@ -31,6 +31,20 @@ if [ ! -d "./$LLVM_TAG/bin" ]; then
     mkdir $LLVM_TAG
     $TAR -zxvf llvm.tar-$LLVM_TAG.tar.gz -C $LLVM_TAG
 fi
+# if aarch64 gcc is not installed, install it
+if [ ! -d "./android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9-${AARCH64_GCC_HASH}/bin" ]; then
+    echo "aarch gcc is not installed, installing it"
+    #download aarch gcc and tar it
+    DOWNLOADER $AARCH64_GCC_URL aarch64_gcc-$AARCH64_GCC_HASH.zip
+    $UNZIP aarch64_gcc-$AARCH64_GCC_HASH.zip
+fi
+# if arm gcc is not installed, install it
+if [ ! -d "./android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9-${ARM_GCC_HASH}/bin" ]; then
+    echo "arm gcc is not installed, installing it"
+    #download arm gcc and tar it
+    DOWNLOADER $ARM_GCC_URL arm_gcc-$ARM_GCC_HASH.zip
+    $UNZIP arm_gcc-$ARM_GCC_HASH.zip
+fi
 # if prebuilts is not installed, install it
 if [ ! -d "./android_prebuilts_build-tools-${PREBUILTS_HASH}/linux-x86/bin/" ]; then
     echo "clang is not installed, installing it"
