@@ -22,16 +22,16 @@ supported.vendorpatchlevels=
 
 ### AnyKernel install
 ## boot files attributes
-attributes() {
-set_perm_recursive 0 0 755 644 $ramdisk/*;
-set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
+boot_attributes() {
+set_perm_recursive 0 0 755 644 $RAMDISK/*;
+set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;
 } # end attributes
 
 # boot shell variables
-block=/dev/block/bootdevice/by-name/boot;
-is_slot_device=0;
-ramdisk_compression=auto;
-patch_vbmeta_flag=auto;
+BLOCK=/dev/block/bootdevice/by-name/boot;
+IS_SLOT_DEVICE=0;
+RAMDISK_COMPRESSION=auto;
+PATCH_VBMETA_FLAG=auto;
 
 # import functions/variables and setup patching - see for reference (DO NOT REMOVE)
 . tools/ak3-core.sh;
@@ -61,15 +61,15 @@ write_boot; # use flash_boot to skip ramdisk repack, e.g. for devices with init_
 
 ## init_boot files attributes
 #init_boot_attributes() {
-#set_perm_recursive 0 0 755 644 $ramdisk/*;
-#set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
+#set_perm_recursive 0 0 755 644 $RAMDISK/*;
+#set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;
 #} # end attributes
 
 # init_boot shell variables
-#block=init_boot;
-#is_slot_device=1;
-#ramdisk_compression=auto;
-#patch_vbmeta_flag=auto;
+#BLOCK=init_boot;
+#IS_SLOT_DEVICE=1;
+#RAMDISK_COMPRESSION=auto;
+#PATCH_VBMETA_FLAG=auto;
 
 # reset for init_boot patching
 #reset_ak;
@@ -82,10 +82,10 @@ write_boot; # use flash_boot to skip ramdisk repack, e.g. for devices with init_
 
 
 ## vendor_kernel_boot shell variables
-#block=vendor_kernel_boot;
-#is_slot_device=1;
-#ramdisk_compression=auto;
-#patch_vbmeta_flag=auto;
+#BLOCK=vendor_kernel_boot;
+#IS_SLOT_DEVICE=1;
+#RAMDISK_COMPRESSION=auto;
+#PATCH_VBMETA_FLAG=auto;
 
 # reset for vendor_kernel_boot patching
 #reset_ak;
@@ -99,15 +99,15 @@ write_boot; # use flash_boot to skip ramdisk repack, e.g. for devices with init_
 
 ## vendor_boot files attributes
 #vendor_boot_attributes() {
-#set_perm_recursive 0 0 755 644 $ramdisk/*;
-#set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
+#set_perm_recursive 0 0 755 644 $RAMDISK/*;
+#set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;
 #} # end attributes
 
 # vendor_boot shell variables
-#block=vendor_boot;
-#is_slot_device=1;
-#ramdisk_compression=auto;
-#patch_vbmeta_flag=auto;
+#BLOCK=vendor_boot;
+#IS_SLOT_DEVICE=1;
+#RAMDISK_COMPRESSION=auto;
+#PATCH_VBMETA_FLAG=auto;
 
 # reset for vendor_boot patching
 #reset_ak;
