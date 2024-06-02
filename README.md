@@ -8,7 +8,7 @@
 - 跟随lineageOS维护的内核持续更新。
 - 使用aosp的ndk clang构建。
 - 仅包含官方功能。
-- 含有kernelsu的内核（实验性）
+- 含有kernelsu的内核（已停止支持，将会在未来删除）
 
 **本项目仅维护dc调光和构建编译。**
 
@@ -39,10 +39,6 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
         |—— 内核版本：4.4.302
         |—— 发布次数：9
 ```
-
-**如命名末尾带有 ksu 和相对应版本的号的，说明含有 kernelsu 模块，如果您无需使用 kernelsu ，请下载仅包含dc的内核**
-
-**有关kernelsu相关的内容，请参阅后续的“关于kernelsu”章节**
 
 在release'页面标注：“20220919 and up”，说明适用于lineage-19.1-20220919-nightly-cheeseburger-signed.zip、lineage-19.1-20220920-nightly-dumpling-signed.zip（5T在LineageOS官方构建时间晚一天）。
 
@@ -77,16 +73,11 @@ lineageOS17（Android10）最后经过测试的版本为4.4.258。（注意4.4.2
 
 lineageOS18.1(Android11)最后经过测试的内核版本为4.4.302v2。（注意4.4.302v3为适配Android12的内核）
 
-## 关于kernelsu
+## 关于kernelsu （已停止支持，将会在未来删除）
 
 kernelsu 是一个 Android 上基于内核的 root 方案。它和 DC Dimming **并无相关**，意味着您可以只用dc Dimming，而不需要依赖 kernelsu 。
 
-
-因为 kernelsu 项目尚在早期的开发中，引入 kernelsu 仅为了学习和研究，所以本项目对 kernelsu 相关的构建无任何保证，亦可能在未来移除 kernelsu 的相关代码，如果您使用到含有 kernelsu 的构建，请确保自己有能力从内核错误中恢复。
-
-
-注意！！！因为我使用的root方案为magisk， kernelsu 仅测试能成功开机和运行其的控制器，**模块功能从未经过测试**。
-
+kernelsu 项目已在 v1.0.0 中移除所有非gki内核的支持，本项目中kernelsu适配已停止，包含kernelsu的内核构建将会在未来被移除，具体请参阅releases页面。
 
 ## 构建
 
