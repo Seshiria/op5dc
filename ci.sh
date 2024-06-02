@@ -34,6 +34,8 @@ Patch_dc() {
     grep -q CONFIG_FLICKER_FREE arch/arm64/configs/lineage_oneplus5_defconfig || echo "CONFIG_FLICKER_FREE=y" >>arch/arm64/configs/lineage_oneplus5_defconfig
 }
 Patch_ksu() {
+    #The kernelsu module is no longer supported and will be removed in the future.
+    ##
     test -d KernelSU || mkdir KernelSU
     cp -R ../KernelSU-$KERNELSU_HASH/* ./KernelSU/
     #source  https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh
@@ -116,6 +118,7 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     Releases "op5lin21-dc") || (echo "dc build error" && exit 1)
 
 ##kernelsu
+echo "The kernelsu module is no longer supported and will be removed in the future."
 Patch_ksu
 test -f localversion || touch localversion
 cat >localversion <<EOF
