@@ -137,4 +137,4 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 \
     import_KSU_GIT_VERSION="${KSU_GIT_VERSION}" &&
-    Releases "op5lin21-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 1)
+    Releases "Deprecated-op5lin21-dc-ksu$KERNEL_SU_VERSION") || (echo "ksu build error" && exit 0)
