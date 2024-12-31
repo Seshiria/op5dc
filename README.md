@@ -8,7 +8,6 @@
 - 跟随lineageOS维护的内核持续更新。
 - 使用aosp的ndk clang构建。
 - 仅包含官方功能。
-- 含有kernelsu的内核（已停止支持，将会在未来删除）
 
 **本项目仅维护dc调光和构建编译。**
 
@@ -73,12 +72,6 @@ lineageOS17（Android10）最后经过测试的版本为4.4.258。（注意4.4.2
 
 lineageOS18.1(Android11)最后经过测试的内核版本为4.4.302v2。（注意4.4.302v3为适配Android12的内核）
 
-## 关于kernelsu （已停止支持，将会在未来删除）
-
-kernelsu 是一个 Android 上基于内核的 root 方案。它和 DC Dimming **并无相关**，意味着您可以只用dc Dimming，而不需要依赖 kernelsu 。
-
-kernelsu 项目已在 v1.0.0 中移除所有非gki内核的支持，本项目中kernelsu适配已停止，包含kernelsu的内核构建将会在未来被移除，具体请参阅releases页面。
-
 ## 构建
 
 测试环境是docker的Ubuntu20.02 x86_64镜像
@@ -125,6 +118,9 @@ make -j"$(nproc --all)" O=out \
     LLVM=1
 ##################################################
 ````
+## 关于kernelsu（已移除支持）
+
+由于kernelsu已不再支持旧版本的内核，自2024年12月31日起，已移除对kernelsu的支持。感谢kernelsu项目的贡献。
 
 ## 引用和参考过的资料
 
@@ -141,7 +137,7 @@ make -j"$(nproc --all)" O=out \
 * 代码检出：https://github.com/actions/checkout
 * 自动发布：https://github.com/ncipollo/release-action
 * 上传文件：https://github.com/actions/upload-artifact
-* kernelsu：https://github.com/tiann/KernelSU
+* kernelsu(已移除支持)：https://github.com/tiann/KernelSU
 * 移植kenrlesu实现的部分代码：https://github.com/sticpaper/android_kernel_xiaomi_msm8998-ksu
 * 鸣谢：[迅速入门Android内核编译 & 一加5 DC调光](https://makiras.org/archives/173?amp)
 * 鸣谢：[DC调光进阶版的开发过程及思路](https://www.akr-developers.com/d/273)

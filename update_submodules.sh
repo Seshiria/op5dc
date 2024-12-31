@@ -48,9 +48,6 @@ PREBUILTS_URL=https://github.com/LineageOS/android_prebuilts_build-tools/archive
 #Anykernel
 ANYKERNEL_HASH=$ANYKERNEL_HASH
 ANYKERNEL_URL=https://github.com/osm0sis/AnyKernel3/archive/"\${ANYKERNEL_HASH}".zip
-#kernelsu
-KERNELSU_HASH=$KERNELSU_HASH
-KERNELSU_URL=https://github.com/tiann/KernelSU/archive/"\${KERNELSU_HASH}".zip
 #lineageos kernel
 KERNEL_HASH=$KERNEL_HASH
 KERNEL_URL=https://github.com/LineageOS/android_kernel_oneplus_msm8998/archive/"\${KERNEL_HASH}".zip
