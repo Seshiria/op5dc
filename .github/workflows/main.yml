@@ -2,7 +2,7 @@ name: Build lineageOS Kernel
 on:
   push:
     branches:
-      - 22.1
+      - master
 jobs:
   build:
     runs-on: ubuntu-22.04
