@@ -47,7 +47,9 @@ Releases() {
     buildtime ${buildtime}
     Image.gz-dtb hash ${md5}
 EOF
-    bash "${GITHUB_WORKSPACE}"/zip.sh "${1}"-"${kernelversion}"_testbuild_"${buildtime}"_"${md5tab}" "${GITHUB_WORKSPACE}"/AnyKernel3-"${ANYKERNEL_HASH}"
+    #bash "${GITHUB_WORKSPACE}"/zip.sh "${1}"-"${kernelversion}"_testbuild_"${buildtime}"_"${md5tab}" "${GITHUB_WORKSPACE}"/AnyKernel3-"${ANYKERNEL_HASH}"
+    echo "fliename="${1}"-"${kernelversion}"_testbuild_"${buildtime}"_"${md5tab}"" >> ${GITHUB_env}
+    echo "fliepath="${GITHUB_WORKSPACE}"/AnyKernel3-"${ANYKERNEL_HASH}"" >> ${GITHUB_env}
 }
 #使用指定的anykernel配置文件
 cp "${GITHUB_WORKSPACE}"/anykernel.sh "${GITHUB_WORKSPACE}"/AnyKernel3-${ANYKERNEL_HASH}/anykernel.sh
