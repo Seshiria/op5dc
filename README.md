@@ -53,7 +53,7 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 
 ### 兼容性
 
-**2023年1月2日，官方lineageOS20.0已经发布，所有测试迁移到Android13，请更新到最新的lineageOS版本。**
+**2024年12月31日，官方lineageOS22.1已经发布，所有测试迁移到Android15，请更新到最新的lineageOS版本。**
 
 #### 系统与内核兼容性
 
@@ -64,7 +64,8 @@ release命名方式：系统版本 + 内核版本 + 对用系统发布日期/发
 |lineageOS18.1(Android11)| 4.4.258v2 - 4.4.302v2 |
 |lineageOS19.1(android12)| 4.4.302v3 - 4.4.302v20221205 |
 |lineageOS20(android13)| 4.4.302v20230102 - 4.4.302v20240212v2 |
-|lineageOS21(android14)| 4.4.302v20240311 and up |
+|lineageOS21(android14)| 4.4.302v20240311 - 4.4.302v20241230 |
+|lineageOS22.1(android15)| 4.4.302v20250120 and up |
 
 lineageOS16（Android9）最后经过测试的内核版本为4.4.153。
 
