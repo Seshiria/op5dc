@@ -12,7 +12,7 @@ jobs:
         run: |
           bash -x ./ci.sh
       - name: Upload to Artifacts
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: testbuild
           path: releases/*.zip
