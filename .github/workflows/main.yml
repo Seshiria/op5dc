@@ -11,6 +11,7 @@ jobs:
       - name: Init Repo
         run: |
           bash -x ./ci.sh
+          cat ${GITHUB_WORKSPACE}/env.add >> $GITHUB_ENV
       - name: Upload to Artifacts
         uses: actions/upload-artifact@v4.6.0
         with:
