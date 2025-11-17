@@ -79,4 +79,4 @@ make -j"$(nproc --all)" O=out lineage_oneplus5_defconfig \
     CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
     LLVM=1 &&
-    Releases "op5lin22.1-dc") || (echo "dc build error" && exit 1)
+    Releases "op5lin22.2-dc") || (echo "dc build error" && exit 1)
